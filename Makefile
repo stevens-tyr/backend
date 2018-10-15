@@ -10,9 +10,7 @@ LIVE = gin run main.go
 build:
 	$(BUILD) -o plague_doctor
 live:
-	export GIN_PORT=5000
-	export BIN_APP_PORT=5001
-	$(LIVE) 
+	env GIN_PORT=5000 BIN_APP_PORT=5555 $(LIVE) 
 fmt:
 	$(FMT) $(GO_FILES)
 lint:

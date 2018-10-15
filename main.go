@@ -11,5 +11,5 @@ func main() {
 	server.Use(tyrgin.Logger())
 	server.Use(gin.Recovery())
 
-	server.Run(":5000")
+	server.Run(":5555")
 }
