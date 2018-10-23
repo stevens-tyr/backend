@@ -1,0 +1,16 @@
+* Plague Doctor
+** What?
+The purpose of this is the main backend to serve the front end of our
+Tyr application. This service will serve as a connection between the
+other microservices as well as handle some of the major application features.
+** Features
+1. Authentication
+2. CMS style endpoints
+** Contributing
+1. Clone the repository locally, and create a new branch.
+2. Run *go get*.
+3. Run *go get golang.org/x/tools/cmd/goimports*.
+4. Make your changes.
+5. Run make all to fmt, lint, and test code.
+6. Make a merge request.
+
