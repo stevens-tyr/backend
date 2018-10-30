@@ -1,8 +1,13 @@
 * Plague Doctor
 ** What?
-The purpose of this is the main backend to serve the front end of our
-Tyr application. This service will serve as a connection between the
-other microservices as well as handle some of the major application features.
+Plague Doctors were Medival physicians who treated victims of the
+bubonic plague. They would go around from city to city, attempting to
+cure those affected by the plague.  Similar to Plague Doctors, this
+service serves as a connection between other services, resolving
+communications and issues that arise from one microservice to
+another. In addition to serving as the backend to the front end
+component, it will also handle some major application features such as
+authentication, fule uploading, and cms.
 ** Features
 1. Authentication
 2. CMS style endpoints
