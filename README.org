@@ -6,8 +6,8 @@ cure those affected by the plague.  Similar to Plague Doctors, this
 service serves as a connection between other services, resolving
 communications and issues that arise from one microservice to
 another. In addition to serving as the backend to the front end
-component, it will also handle some major application features such asauthentication, file uploading, and
-a content management system.
+component, it will also handle some major application features such as 
+authentication, file uploading, and a content management system.
 ** Features
 1. Authentication
 2. CMS style endpoints
