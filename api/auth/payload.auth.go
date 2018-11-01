@@ -10,7 +10,11 @@ import (
 func PayloadFunc(data interface{}) jwt.MapClaims {
 	switch data.(type) {
 	case models.User:
-		return jwt.MapClaims{"courses": data.(models.User).EnrolledCourses}
+		user := data.(models.User)
+		return jwt.MapClaims{
+			"uid":     user.ID,
+			"courses": user.EnrolledCourses,
+		}
 	default:
 		return jwt.MapClaims{}
 	}

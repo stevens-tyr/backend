@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/stevens-tyr/tyr-gin"
 	bson "gopkg.in/mgo.v2/bson"
@@ -129,10 +130,10 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	cid := c.Param("cid")
+	cid := bson.ObjectIdHex(c.Param("cid"))
 	sec := c.Param("section")
 
-	if err = courseCol.Update(bson.M{"_id": bson.ObjectIdHex(cid), "section": sec}, bson.M{"$push": bson.M{"assignments": assign.ID}}); err != nil {
+	if err = courseCol.Update(bson.M{"_id": cid, "section": sec}, bson.M{"$push": bson.M{"assignments": assign.ID}}); err != nil {
 		c.JSON(500, gin.H{
 			"staus_code": 500,
 			"message":    "Failed to update course.",
@@ -199,9 +200,9 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	// claims := jwt.ExtractClaims(c)
-	// claims["uid"].(string)
-	uid := bson.ObjectIdHex("5bd7a96091895e864db1ab7b")
+	claims := jwt.ExtractClaims(c)
+	uid := bson.ObjectIdHex(claims["uid"].(string))
+	//uid := bson.ObjectIdHex("5bd7a96091895e864db1ab7b")
 
 	// See if previous submission exists
 	//cid := c.Param("cid")
@@ -216,15 +217,36 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
+	var assign models.Assignment
+	if err = assignCol.Find(bson.M{"_id": aid}).One(&assign); err != nil {
+		c.JSON(500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to find assignment.",
+		})
+		return
+	}
+
 	var previousSub models.AssignmentSubmission
-	assignCol.Find(bson.M{"_id": aid}).Limit(1).Sort("submissions.attemptNumber").One(previousSub)
+	for _, assignSub := range assign.Submissions {
+		if assignSub.UserID == uid && assignSub.AttemptNumber > previousSub.AttemptNumber {
+			previousSub = assignSub
+		}
+	}
+
+	if previousSub.AttemptNumber+1 > assign.NumAttempts && assign.NumAttempts != 0 {
+		c.JSON(400, gin.H{
+			"status_code": 400,
+			"message":     "Number of attempts exceeded.",
+		})
+		return
+	}
 
 	// Otherwise (hardcoded values for now)
 
 	msub := models.Submission{
 		ID:            bson.NewObjectId(),
 		UserID:        uid,
-		AttemptNumber: 0,
+		AttemptNumber: previousSub.AttemptNumber + 1,
 		File:          "url",
 		ErrorTesting:  true,
 		Cases: models.Cases{
@@ -245,12 +267,24 @@ func SubmitAssignment(c *gin.Context) {
 		AttemptNumber: 1,
 	}
 
-	subCol.Insert(&msub)
+	if err = subCol.Insert(&msub); err != nil {
+		c.JSON(500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to create submission.",
+		})
+		return
+	}
 
-	assignCol.Update(bson.M{"_id": aid}, bson.M{"$push": bson.M{"submissions": &up}})
+	if err = assignCol.Update(bson.M{"_id": aid}, bson.M{"$push": bson.M{"submissions": &up}}); err != nil {
+		c.JSON(500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to update assignment.",
+		})
+		return
+	}
 
 	c.JSON(201, gin.H{
 		"status_code": 201,
-		"message":     "Submission Graded2.",
+		"message":     "Submission Graded.",
 	})
 }
