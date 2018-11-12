@@ -7,6 +7,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt"
 )
 
+// AuthMiddleware is a jwt middleware for auth requests
 var AuthMiddleware = &jwt.GinJWTMiddleware{
 	Realm:         os.Getenv("JWT_REALM"),
 	Key:           []byte(os.Getenv("JWT_SECRET")),
@@ -16,7 +17,7 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 	Authorizator:  Authorizator,
 	PayloadFunc:   PayloadFunc,
 	Unauthorized:  Unauthorized,
-	TokenLookup:   "header:Authorization",
+	TokenLookup:   "header:Authorization, cookie: JWTToken",
 	TokenHeadName: "Bearer",
 	TimeFunc:      time.Now,
 	SendCookie:    true,
