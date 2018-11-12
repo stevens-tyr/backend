@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"errors"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/goware/emailx"
+
 	"github.com/stevens-tyr/tyr-gin"
 	"golang.org/x/crypto/bcrypt"
 	mgo "gopkg.in/mgo.v2"
@@ -32,29 +34,30 @@ func IsValidEmail(email string) error {
 // Register a function that registers a User.
 func Register(c *gin.Context) {
 	var register models.RegisterForm
-	if err := c.ShouldBindJSON(&register); err != nil {
-		c.JSON(400, gin.H{
-			"status_code": 400,
-			"message":     "Incorrect json format.",
-		})
+	err := c.ShouldBindJSON(&register)
+	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
+		"status_code": 400,
+		"message":     "Incorrect json format.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	db, err := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get Mongo Session.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get Mongo Session.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	col, err := tyrgin.GetMongoCollectionCreate("users", db)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get collection.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get collection.",
+		"error":       err,
+	}) {
 		return
 	}
 
@@ -63,36 +66,42 @@ func Register(c *gin.Context) {
 		if err == models.ErrorUnresolvableEmailHost {
 			msg = "Unable to resolve email host"
 		}
-		c.JSON(400, gin.H{
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
 			"message":     msg,
+			"error":       err,
 		})
 		return
 	}
 
 	var user models.User
-	if err = col.Find(bson.M{"email": register.Email}).One(&user); err != mgo.ErrNotFound {
-		c.JSON(400, gin.H{
+	err = col.Find(bson.M{"email": register.Email}).One(&user)
+
+	if err != mgo.ErrNotFound {
+		err = errors.New("Email is taken.")
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
 			"message":     "Email is taken.",
+			"error":       err,
 		})
 		return
 	}
 
 	if register.Password != register.PasswordConfirmation {
-		c.JSON(400, gin.H{
+		tyrgin.ErrorHandler(errors.New("Non Matching Passwords."), c, 400, gin.H{
 			"status_code": 400,
 			"message":     "Your password and password confirmation do not match.",
+			"error":       err,
 		})
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(register.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to generate hash",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to generate hash",
+		"error":       err,
+	}) {
 		return
 	}
 
@@ -105,11 +114,11 @@ func Register(c *gin.Context) {
 	}
 
 	err = col.Insert(&user)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to create user.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to create user.",
+		"error":       err,
+	}) {
 		return
 	}
 

@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"errors"
 	"net/http"
 	"os"
 
@@ -23,76 +24,77 @@ func versionCheck(a *models.CreateAssignment) {
 // CreateAssignment will create an assignment and add its id to a course.
 func CreateAssignment(c *gin.Context) {
 	var ca models.CreateAssignment
-	if err := c.ShouldBind(&ca); err != nil {
-		c.JSON(400, gin.H{
-			"status_code": 400,
-			"message":     "Invalid json.",
-			"err":         err,
-		})
+	err := c.ShouldBind(&ca)
+	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
+		"status_code": 400,
+		"message":     "Invalid json.",
+		"error":       err,
+	}) {
 		return
 	}
 	versionCheck(&ca)
 
 	sft, err := c.FormFile("studentFacingTests")
 	if err != nil && err != http.ErrMissingFile {
-		c.JSON(400, gin.H{
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
 			"message":     "Problem uploading student facing tests.",
+			"error":       err,
 		})
 		return
 	}
 
 	_, err = utils.CheckFileType(sft)
 	if err != nil && err != utils.ErrorFileDNE {
-		c.JSON(400, gin.H{
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code":   400,
 			"message":       "Incorrect file type for student facing tests.",
 			"allowed_types": []string{".zip", ".tar.gz"},
+			"error":         err,
 		})
 		return
 	}
 
 	aft, err := c.FormFile("adminFacingTests")
-	if err == http.ErrMissingFile {
-		c.JSON(400, gin.H{
+	if err != nil {
+		msg := "Problem uploading student facing tests."
+		if err == http.ErrMissingFile {
+			msg = "Please upload an admin facing test."
+		}
+
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
-			"message":     "Please upload an admin facing test.",
-		})
-		return
-	} else if err != nil {
-		c.JSON(400, gin.H{
-			"status_code": 400,
-			"message":     "Problem uploading student facing tests.",
+			"message":     msg,
+			"error":       err,
 		})
 		return
 	}
 
 	_, err = utils.CheckFileType(aft)
-	if err != nil {
-		c.JSON(400, gin.H{
-			"status_code":   400,
-			"message":       "Incorrect file type for student facing tests.",
-			"allowed_types": []string{".zip", ".tar.gz"},
-		})
+	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
+		"status_code":   400,
+		"message":       "Incorrect file type for student facing tests.",
+		"allowed_types": []string{".zip", ".tar.gz"},
+		"error":         err,
+	}) {
 		return
 	}
 
 	// mongo
 	db, err := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get Mongo Session.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get Mongo Session.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	assignCol, err := tyrgin.GetMongoCollectionCreate("assignments", db)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get collection.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get collection.",
+	}) {
 		return
 	}
 
@@ -113,31 +115,33 @@ func CreateAssignment(c *gin.Context) {
 		Submissions: make([]models.AssignmentSubmission, 0),
 	}
 
-	if err = assignCol.Insert(&assign); err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to create assignment.",
-		})
+	err = assignCol.Insert(&assign)
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to create assignment.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	courseCol, err := tyrgin.GetMongoCollectionCreate("courses", db)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get collection.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get collection.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	cid := bson.ObjectIdHex(c.Param("cid"))
 	sec := c.Param("section")
 
-	if err = courseCol.Update(bson.M{"_id": cid, "section": sec}, bson.M{"$push": bson.M{"assignments": assign.ID}}); err != nil {
-		c.JSON(500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to update course.",
-		})
+	err = courseCol.Update(bson.M{"_id": cid, "section": sec}, bson.M{"$push": bson.M{"assignments": assign.ID}})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"staus_code": 500,
+		"message":    "Failed to update course.",
+		"error":      err,
+	}) {
 		return
 	}
 
@@ -153,27 +157,27 @@ func CreateAssignment(c *gin.Context) {
 // SubmitAssignment will submit and grade the submission. Also updates the assignment.
 func SubmitAssignment(c *gin.Context) {
 	sub, err := c.FormFile("submission")
-	if err == http.ErrMissingFile {
-		c.JSON(400, gin.H{
+	if err != nil {
+		msg := "Problem uploading submission."
+		if err == http.ErrMissingFile {
+			msg = "Please upload your submission."
+		}
+
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
-			"message":     "Please upload your submission.",
-		})
-		return
-	} else if err != nil {
-		c.JSON(400, gin.H{
-			"status_code": 400,
-			"message":     "Problem uploading submission.",
+			"message":     msg,
+			"error":       err,
 		})
 		return
 	}
 
 	_, err = utils.CheckFileType(sub)
-	if err != nil {
-		c.JSON(400, gin.H{
-			"status_code":   400,
-			"message":       "Incorrect file type for submission.",
-			"allowed_types": []string{".zip", ".tar.gz"},
-		})
+	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
+		"status_code":   400,
+		"message":       "Incorrect file type for submission.",
+		"allowed_types": []string{".zip", ".tar.gz"},
+		"error":         err,
+	}) {
 		return
 	}
 
@@ -183,20 +187,20 @@ func SubmitAssignment(c *gin.Context) {
 
 	// Mongo
 	db, err := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get Mongo Session.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get Mongo Session.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	subCol, err := tyrgin.GetMongoCollectionCreate("submissions", db)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get sub collection.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get sub collection.",
+		"error":       err,
+	}) {
 		return
 	}
 
@@ -209,20 +213,21 @@ func SubmitAssignment(c *gin.Context) {
 	aid := bson.ObjectIdHex(c.Param("aid"))
 
 	assignCol, err := tyrgin.GetMongoCollectionCreate("assignments", db)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get assign collection.",
-		})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to get assign collection.",
+		"error":       err,
+	}) {
 		return
 	}
 
 	var assign models.Assignment
-	if err = assignCol.Find(bson.M{"_id": aid}).One(&assign); err != nil {
-		c.JSON(500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to find assignment.",
-		})
+	err = assignCol.Find(bson.M{"_id": aid}).One(&assign)
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"staus_code": 500,
+		"message":    "Failed to find assignment.",
+		"error":      err,
+	}) {
 		return
 	}
 
@@ -234,9 +239,11 @@ func SubmitAssignment(c *gin.Context) {
 	}
 
 	if previousSub.AttemptNumber+1 > assign.NumAttempts && assign.NumAttempts != 0 {
-		c.JSON(400, gin.H{
+		err = errors.New("Number of attemtps exceeded")
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
 			"message":     "Number of attempts exceeded.",
+			"error":       err,
 		})
 		return
 	}
@@ -275,11 +282,12 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	if err = assignCol.Update(bson.M{"_id": aid}, bson.M{"$push": bson.M{"submissions": &up}}); err != nil {
-		c.JSON(500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to update assignment.",
-		})
+	err = assignCol.Update(bson.M{"_id": aid}, bson.M{"$push": bson.M{"submissions": &up}})
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"staus_code": 500,
+		"message":    "Failed to update assignment.",
+		"error":      err,
+	}) {
 		return
 	}
 
