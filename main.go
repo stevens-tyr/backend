@@ -22,6 +22,12 @@ func main() {
 		tyrgin.NewRoute(auth.AuthMiddleware.LoginHandler, "login", false, tyrgin.POST),
 		tyrgin.NewRoute(auth.AuthMiddleware.RefreshHandler, "refresh_token", false, tyrgin.GET),
 		tyrgin.NewRoute(auth.Register, "register", false, tyrgin.POST),
+		tyrgin.NewRoute(func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"status_code": 200,
+				"msg":         "Success.",
+			})
+		}, "logged_in", true, tyrgin.GET),
 	}
 
 	tyrgin.AddRoutes(server, auth.AuthMiddleware, "1", "auth", authEndpoints)
