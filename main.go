@@ -35,6 +35,7 @@ func main() {
 	var cmsEndpoints = []tyrgin.APIAction{
 		tyrgin.NewRoute(cms.CreateAssignment, "course/:cid/:section/assignment/create", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/:section/assignment/submit/:aid", true, tyrgin.POST),
+		tyrgin.NewRoute(cms.Dashboard, "dashboard", true, tyrgin.GET),
 	}
 
 	tyrgin.AddRoutes(server, auth.AuthMiddleware, "1", "plague_doctor", cmsEndpoints)
