@@ -10,6 +10,7 @@ require (
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/golang/lint v0.0.0-20181026193005-c67002cb31c3 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/googleapis/gax-go v2.0.0+incompatible // indirect
 	github.com/goware/emailx v0.0.0-20171023230436-0bae9679d4e3
 	github.com/grpc-ecosystem/grpc-gateway v1.5.1 // indirect
@@ -28,7 +29,7 @@ require (
 	golang.org/x/net v0.0.0-20181029044818-c44066c5c816
 	golang.org/x/oauth2 v0.0.0-20181017192945-9dcd33a902f4 // indirect
 	golang.org/x/sys v0.0.0-20181030150119-7e31e0c00fa0 // indirect
-	golang.org/x/tools v0.0.0-20181030151751-bb28844c46df // indirect
+	golang.org/x/tools v0.0.0-20181117154741-2ddaf7f79a09 // indirect
 	google.golang.org/api v0.0.0-20181030000543-1d582fd0359e // indirect
 	google.golang.org/appengine v1.2.0 // indirect
 	google.golang.org/genproto v0.0.0-20181029155118-b69ba1387ce2 // indirect
