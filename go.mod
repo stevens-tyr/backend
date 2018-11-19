@@ -23,6 +23,7 @@ require (
 	github.com/prometheus/common v0.0.0-20181020173914-7e9e6cabbd39 // indirect
 	github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d // indirect
 	github.com/stevens-tyr/tyr-gin v0.0.0-20181112003757-c27fa299e8dd
+	github.com/stretchr/testify v1.2.2
 	github.com/ulikunitz/xz v0.5.5 // indirect
 	go.opencensus.io v0.18.0 // indirect
 	golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16

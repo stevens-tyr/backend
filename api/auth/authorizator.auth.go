@@ -4,7 +4,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 
-	"string"
+	"strings"
 )
 
 func allowed(perm, level string, claims map[string]interface{}) bool {
@@ -17,12 +17,12 @@ func allowed(perm, level string, claims map[string]interface{}) bool {
 	return false
 }
 
-func determineLevel(route string) {
-	if string.Contains(route, "create") {
+func determineLevel(route string) string {
+	if strings.Contains(route, "create") {
 		return "teacher"
 	}
 
-	if string.Contains(route, "submit") {
+	if strings.Contains(route, "submit") {
 		return "student"
 	}
 
@@ -35,10 +35,10 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 	aid := c.Param("aid")
 	cid := c.Param("cid")
 
-	userShouldBe := determineLevel(c.Request.Url.String())
+	userShouldBe := determineLevel(c.Request.URL.String())
 
 	if cid != "" && aid != "" {
-		return allowed(cid, userShouldBe, claims) && allowed(aid, claims)
+		return allowed(cid, userShouldBe, claims) && allowed(aid, userShouldBe, claims)
 	} else if cid != "" {
 		return allowed(cid, userShouldBe, claims)
 	} else if aid != "" {
