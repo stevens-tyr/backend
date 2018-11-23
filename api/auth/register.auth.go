@@ -1,23 +1,25 @@
 package auth
 
 import (
+	ctx "context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/goware/emailx"
 
-	"github.com/stevens-tyr/tyr-gin"
+	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/options"
 	"golang.org/x/crypto/bcrypt"
-	mgo "gopkg.in/mgo.v2"
-	bson "gopkg.in/mgo.v2/bson"
 
 	"backend/models"
+
+	"github.com/stevens-tyr/tyr-gin"
 )
 
-// IsValidEmail checks an email string to be valid and with resolvable host.
-func IsValidEmail(email string) error {
-
+// isValidEmail checks an email string to be valid and with resolvable host.
+func isValidEmail(email string) error {
 	err := emailx.Validate(email)
 	if err != nil {
 		if err == emailx.ErrInvalidFormat {
@@ -52,16 +54,9 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	col, err := tyrgin.GetMongoCollectionCreate("users", db)
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"status_code": 500,
-		"message":     "Failed to get collection.",
-		"error":       err,
-	}) {
-		return
-	}
+	col := tyrgin.GetMongoCollection("users", db)
 
-	if err = IsValidEmail(register.Email); err != nil {
+	if err = isValidEmail(register.Email); err != nil {
 		msg := "Email is invalid"
 		if err == models.ErrorUnresolvableEmailHost {
 			msg = "Unable to resolve email host"
@@ -75,10 +70,11 @@ func Register(c *gin.Context) {
 	}
 
 	var user models.User
-	err = col.Find(bson.M{"email": register.Email}).One(&user)
+	res := col.FindOne(ctx.Background(), bson.M{"email": register.Email}, options.FindOne())
+	res.Decode(&user)
 
-	if err != mgo.ErrNotFound {
-		err = errors.New("Email is taken.")
+	if user.Email != "" {
+		err = errors.New("Email is taken")
 		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
 			"message":     "Email is taken.",
@@ -88,7 +84,7 @@ func Register(c *gin.Context) {
 	}
 
 	if register.Password != register.PasswordConfirmation {
-		tyrgin.ErrorHandler(errors.New("Non Matching Passwords."), c, 400, gin.H{
+		tyrgin.ErrorHandler(errors.New("Non Matching Passwords"), c, 400, gin.H{
 			"status_code": 400,
 			"message":     "Your password and password confirmation do not match.",
 			"error":       err,
@@ -113,7 +109,7 @@ func Register(c *gin.Context) {
 		EnrolledCourses: make([]models.EnrolledCourse, 0),
 	}
 
-	err = col.Insert(&user)
+	_, err = col.InsertOne(ctx.Background(), &user, options.InsertOne())
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"status_code": 500,
 		"message":     "Failed to create user.",
@@ -122,6 +118,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("end")
 	c.JSON(200, gin.H{
 		"status_code": 200,
 		"message":     "User created.",

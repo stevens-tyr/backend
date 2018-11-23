@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	ctx "context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,14 +15,14 @@ import (
 	assert "github.com/stretchr/testify/assert"
 
 	"github.com/stevens-tyr/tyr-gin"
-	bson "gopkg.in/mgo.v2/bson"
+	"github.com/mongodb/mongo-go-driver/bson"
 )
 
 func cleanUserDB(email string) {
 	db, _ := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	assignCol, _ := tyrgin.GetMongoCollectionCreate("users", db)
+	assignCol := tyrgin.GetMongoCollection("users", db)
 
-	assignCol.Remove(bson.M{"email": email})
+	assignCol.DeleteOne(ctx.Background(), bson.M{"email": email})
 }
 
 func performRequest(r http.Handler, method, path string, body []byte, token string) *httptest.ResponseRecorder {

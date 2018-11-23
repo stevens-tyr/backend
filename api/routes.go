@@ -8,6 +8,7 @@ import (
 	"github.com/stevens-tyr/tyr-gin"
 )
 
+// SetUp is a function to set up the routes for plague doctor microservice.
 func SetUp() *gin.Engine {
 	server := tyrgin.SetupRouter()
 
@@ -15,7 +16,7 @@ func SetUp() *gin.Engine {
 
 	server.MaxMultipartMemory = 50 << 20
 
-	server.Use(tyrgin.Logger())
+	//server.Use(tyrgin.Logger())
 	server.Use(gin.Recovery())
 
 	var authEndpoints = []tyrgin.APIAction{

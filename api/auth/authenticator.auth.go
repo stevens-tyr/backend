@@ -1,15 +1,19 @@
 package auth
 
 import (
+	ctx "context"
+	"fmt"
 	"os"
 
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
-	"github.com/stevens-tyr/tyr-gin"
+	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/options"
 	bcrypt "golang.org/x/crypto/bcrypt"
-	bson "gopkg.in/mgo.v2/bson"
 
 	"backend/models"
+
+	"github.com/stevens-tyr/tyr-gin"
 )
 
 // Authenticator a default function for a gin jwt, that authenticates a user.
@@ -20,10 +24,14 @@ func Authenticator(c *gin.Context) (interface{}, error) {
 	}
 
 	db, _ := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	col, err := tyrgin.GetMongoCollectionCreate("users", db)
+	col := tyrgin.GetMongoCollection("users", db)
 
 	var user models.User
-	if err = col.Find(bson.M{"email": login.Email}).One(&user); err != nil {
+	res := col.FindOne(ctx.Background(), bson.M{"email": login.Email}, options.FindOne())
+
+	err := res.Decode(&user)
+	fmt.Println(user)
+	if user.Email == "" {
 		return "User not found.", models.ErrorUserNotFound
 	}
 
