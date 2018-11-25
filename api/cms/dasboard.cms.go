@@ -1,15 +1,21 @@
 package cms
 
 import (
-	"fmt"
+	ctx "context"
 	"os"
+
+	"backend/models"
 
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/mongodb/mongo-go-driver/options"
+
 	"github.com/stevens-tyr/tyr-gin"
-	bson "gopkg.in/mgo.v2/bson"
 )
 
+// Dashboard is the function for a route to display all course a user has.
 func Dashboard(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 
@@ -22,21 +28,21 @@ func Dashboard(c *gin.Context) {
 		return
 	}
 
-	col, err := tyrgin.GetMongoCollectionCreate("users", db)
+	col := tyrgin.GetMongoCollection("users", db)
+
+	uid, err := objectid.FromHex(claims["uid"].(string))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"status_code": 500,
-		"message":     "Failed to get collection.",
+		"message":     "Failed to extract userid as valid mongo objectid.",
 		"error":       err,
 	}) {
 		return
 	}
 
-	fmt.Println("uid", claims["uid"].(string))
-
-	query := []bson.M{
-		{"$match": bson.M{"_id": bson.ObjectIdHex(claims["uid"].(string))}},
-		{"$unwind": "$enrolledCourses"},
-		{
+	query := []interface{}{
+		bson.M{"$match": bson.M{"_id": uid}},
+		bson.M{"$unwind": "$enrolledCourses"},
+		bson.M{
 			"$lookup": bson.M{
 				"from":         "courses",
 				"localField":   "enrolledCourses.courseID",
@@ -44,18 +50,41 @@ func Dashboard(c *gin.Context) {
 				"as":           "course",
 			},
 		},
-		//{"$project": bson.M{"course": bson.M{"$arrayElemAt": bson.D{{"$course", 0}}}, "_id": 0}},
+		bson.M{"$project": bson.M{
+			"_id": 0,
+			"course": bson.M{
+				"$arrayElemAt": bson.A{"$course", 0},
+			},
+		},
+		},
 	}
-	fmt.Println(query)
-	pipe := col.Pipe(query)
 
-	var courses []map[string]interface{}
-	err = pipe.All(&courses)
-	fmt.Println(err, courses)
+	cur, err := col.Aggregate(ctx.Background(), query, options.Aggregate())
+	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+		"status_code": 500,
+		"message":     "Failed to query mongo.",
+		"error":       err,
+	}) {
+		return
+	}
+
+	var courses []models.CourseAgg
+	for cur.Next(ctx.Background()) {
+		var course map[string]models.CourseAgg
+		err = cur.Decode(&course)
+		if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"status_code": 500,
+			"message":     "Failed to decode course.",
+			"error":       err,
+		}) {
+			return
+		}
+		courses = append(courses, course["course"])
+	}
 
 	c.JSON(200, gin.H{
 		"status_code": 200,
-		"msg":         "courses bitch",
-		"courses":     courses[0]["course"],
+		"msg":         "User's courses.",
+		"courses":     courses,
 	})
 }

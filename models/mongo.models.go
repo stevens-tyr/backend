@@ -3,7 +3,8 @@ package models
 import (
 	"errors"
 
-	bson "gopkg.in/mgo.v2/bson"
+	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )
 
 var (
@@ -53,13 +54,13 @@ type (
 
 	// Submission struct the struct to represent a submission to an page.
 	Submission struct {
-		ID             bson.ObjectId       `bson:"_id" json:"id" binding:"required"`
-		UserID         bson.ObjectId       `bson:"userID" json:"userID" binding:"required"`
-		AttemptNumber  int                 `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
-		SubmissionDate bson.MongoTimestamp `bson:"submissionDate" json:"submissionDate" binding:"required"`
-		File           string              `bson:"file" json:"file" binding:"required"`
-		ErrorTesting   bool                `bson:"errorTesting" json:"errorTesting" binding:"required"`
-		Cases          Cases               `bson:"cases" json:"cases" binding:"required"`
+		ID             objectid.ObjectID  `bson:"_id" json:"id" binding:"required"`
+		UserID         objectid.ObjectID  `bson:"userID" json:"userID" binding:"required"`
+		AttemptNumber  int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
+		SubmissionDate primitive.DateTime `bson:"submissionDate" json:"submissionDate" binding:"required"`
+		File           string             `bson:"file" json:"file" binding:"required"`
+		ErrorTesting   bool               `bson:"errorTesting" json:"errorTesting" binding:"required"`
+		Cases          Cases              `bson:"cases" json:"cases" binding:"required"`
 	}
 
 	// TestScripts struct to represent filenames on gcp storage of scripts.
@@ -69,21 +70,21 @@ type (
 	}
 
 	AssignmentSubmission struct {
-		UserID        bson.ObjectId `bson:"userID" json:"userID" binding:"required"`
-		SubmissionID  bson.ObjectId `bson:"submissionID" json:"submissionID" binding:"required"`
-		AttemptNumber int           `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
+		UserID        objectid.ObjectID `bson:"userID" json:"userID" binding:"required"`
+		SubmissionID  objectid.ObjectID `bson:"submissionID" json:"submissionID" binding:"required"`
+		AttemptNumber int               `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
 	}
 
 	// Assignment struct to store information about an assignment.
 	Assignment struct {
-		ID              bson.ObjectId          `bson:"_id" json:"id" binding:"required"`
+		ID              objectid.ObjectID      `bson:"_id" json:"id" binding:"required"`
 		Language        string                 `bson:"language" json:"lanaguage" binding:"required"`
 		Version         string                 `bson:"version" json:"version" binding:"required"`
 		Name            string                 `bson:"name" json:"name" binding:"required"`
 		NumAttempts     int                    `bson:"numAttempts" json:"numAttempts" binding:"required"`
 		Description     string                 `bson:"description" json:"description" binding:"required"`
 		SupportingFiles string                 `bson:"supportingFiles" json:"supportingFiles" binding:"required"`
-		DueDate         bson.MongoTimestamp    `bson:"dueDate" json:"dueDate" binding:"required"`
+		DueDate         primitive.DateTime     `bson:"dueDate" json:"dueDate" binding:"required"`
 		Published       bool                   `bson:"published" json:"published" binding:"required"`
 		TestScripts     TestScripts            `bson:"testScripts" json:"testScripts" binding:"required"`
 		Submissions     []AssignmentSubmission `bson:"submissions" json:"submissions" binding:"required"`
@@ -91,29 +92,29 @@ type (
 
 	// Course struct ot store information about a course.
 	Course struct {
-		ID          bson.ObjectId   `bson:"_id,omitempty" json:"id" binding:"required"`
-		Department  string          `bson:"department" json:"department" binding:"required"`
-		Number      int             `bson:"number" json:"number" binding:"required"`
-		Section     string          `bson:"section" json:"section" binding:"required"`
-		Professors  []bson.ObjectId `bson:"professors" json:"professors" binding:"required"`
-		Assistants  []bson.ObjectId `bson:"assistants" json:"assitants" binding:"required"`
-		Students    []bson.ObjectId `bson:"students" json:"students" binding:"required"`
-		Assignments []bson.ObjectId `bson:"assignments" json:"assignments" binding:"required"`
+		ID          objectid.ObjectID   `bson:"_id,omitempty" json:"id" binding:"required"`
+		Department  string              `bson:"department" json:"department" binding:"required"`
+		Number      int                 `bson:"number" json:"number" binding:"required"`
+		Section     string              `bson:"section" json:"section" binding:"required"`
+		Professors  []objectid.ObjectID `bson:"professors" json:"professors" binding:"required"`
+		Assistants  []objectid.ObjectID `bson:"assistants" json:"assitants" binding:"required"`
+		Students    []objectid.ObjectID `bson:"students" json:"students" binding:"required"`
+		Assignments []objectid.ObjectID `bson:"assignments" json:"assignments" binding:"required"`
 	}
 
 	// EnrolledCourse struct keeps track of a user's course and enrollment type
 	EnrolledCourse struct {
-		CourseID       bson.ObjectId `bson:"courseID" json:"courseID" binding:"required"`
-		EnrollmentType string        `bson:"enrollmentType" json:"enrollmentType" binding:"required"`
+		CourseID       objectid.ObjectID `bson:"courseID" json:"courseID" binding:"required"`
+		EnrollmentType string            `bson:"enrollmentType" json:"enrollmentType" binding:"required"`
 	}
 
 	// User a default User struct to represent a User in Tyr.
 	User struct {
-		ID              bson.ObjectId    `bson:"_id,omitempty" json:"id" biding:"required"`
-		Email           string           `bson:"email" json:"email" binding:"required"`
-		Password        []byte           `bson:"password" json:"password" binding:"required"`
-		First           string           `bson:"firstName" json:"first_name" binding:"required"`
-		Last            string           `bson:"lastName" json:"last_name" binding:"required"`
-		EnrolledCourses []EnrolledCourse `bson:"enrolledCourses" json:"enrolledCourses" binding:"required"`
+		ID              objectid.ObjectID `bson:"_id,omitempty" json:"id" biding:"required"`
+		Email           string            `bson:"email" json:"email" binding:"required"`
+		Password        []byte            `bson:"password" json:"password" binding:"required"`
+		First           string            `bson:"firstName" json:"first_name" binding:"required"`
+		Last            string            `bson:"lastName" json:"last_name" binding:"required"`
+		EnrolledCourses []EnrolledCourse  `bson:"enrolledCourses" json:"enrolledCourses" binding:"required"`
 	}
 )

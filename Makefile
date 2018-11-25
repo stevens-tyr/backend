@@ -3,7 +3,7 @@ GO_FILES = $(shell find . -maxdepth 1 -type f -name '*.go')
 FMT = $(GO)imports -w 
 LINT = $(GO)lint
 TEST = $(GO) test
-VET = $(GO) vet
+VET = $(GO) vet -composites=false
 BUILD = $(GO) build
 LIVE = gin run main.go
 
