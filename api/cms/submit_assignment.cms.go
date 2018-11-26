@@ -80,7 +80,7 @@ func SubmitAssignment(c *gin.Context) {
 
 	sid := objectid.New()
 	submittedFilesName := fmt.Sprintf("%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid)
-	_, err = bucket.GridFSUploadFile(submittedFilesName, bytes.NewReader(submissionFiles))
+	err = bucket.GridFSUploadFile(sid, submittedFilesName, bytes.NewReader(submissionFiles))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to upload supporting files.",

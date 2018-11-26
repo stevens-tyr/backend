@@ -208,7 +208,7 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	_, err = bucket.GridFSUploadFile(assign.TestScripts.AdminFacing, bytes.NewReader(adminTestFiles))
+	err = bucket.GridFSUploadFile(objectid.New(), assign.TestScripts.AdminFacing, bytes.NewReader(adminTestFiles))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to upload admin facing tests.",
@@ -217,7 +217,7 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	_, err = bucket.GridFSUploadFile(assign.SupportingFiles, bytes.NewReader(supportingFiles))
+	err = bucket.GridFSUploadFile(objectid.New(), assign.SupportingFiles, bytes.NewReader(supportingFiles))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to upload supporting files.",
@@ -227,7 +227,7 @@ func CreateAssignment(c *gin.Context) {
 	}
 
 	if len(studentTestFiles) > 0 {
-		_, err = bucket.GridFSUploadFile(assign.TestScripts.StudentFacing, bytes.NewReader(studentTestFiles))
+		err = bucket.GridFSUploadFile(objectid.New(), assign.TestScripts.StudentFacing, bytes.NewReader(studentTestFiles))
 		if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 			"staus_code": 500,
 			"message":    "Failed to upload student facing tests.",
