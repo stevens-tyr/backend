@@ -32,7 +32,7 @@ func DownloadSubmission(c *gin.Context) {
 		return
 	}
 
-	bucket, err := tyrgin.GetGridFSBucket(fdb, fmt.Sprintf("%s%s", c.Param("cid"), c.Param("aid")), int32(bucketSize))
+	bucket, err := tyrgin.GetGridFSBucket(fdb, "fs", int32(bucketSize))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to get assignments bucket.",
@@ -46,13 +46,14 @@ func DownloadSubmission(c *gin.Context) {
 	fileID, err := objectid.FromHex(c.Param("sid"))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
-		"message":    "Inavlid course submission id.",
+		"message":    "Inavlid submission id.",
 		"error":      err,
 	}) {
 		return
 	}
 
 	file, err := bucket.GridFSDownloadFile(fileID)
+	fmt.Println("after", fileID, err)
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to get submission.",
@@ -61,9 +62,9 @@ func DownloadSubmission(c *gin.Context) {
 		return
 	}
 
-	additonalHeaders := map[string]string {
-		"Content-Disposition": fmt.Sprintf(`attachment; filename=" $%s-%s.tar.gz"`, c.Param("sid"), c.Param("num")) ,
+	additonalHeaders := map[string]string{
+		"Content-Disposition": fmt.Sprintf(`attachment; filename=" $%s-%s.tar.gz"`, c.Param("sid"), c.Param("num")),
 	}
 
-	c.DataFromReader(200, int64(file.Len()), "application/tar+gzi", bytes.NewReader(file.Bytes()), additonalHeaders)
+	c.DataFromReader(200, 2, "application/tar+gzi", bytes.NewReader(file.Bytes()), additonalHeaders)
 }

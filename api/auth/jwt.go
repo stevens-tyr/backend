@@ -14,7 +14,7 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 	Timeout:       time.Hour,
 	MaxRefresh:    time.Hour * 24,
 	Authenticator: Authenticator,
-	Authorizator:  Authorizator,
+	//Authorizator:  Authorizator,
 	PayloadFunc:   PayloadFunc,
 	Unauthorized:  Unauthorized,
 	TokenLookup:   "header:Authorization, cookie: JWTToken",

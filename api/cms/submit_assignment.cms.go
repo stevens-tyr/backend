@@ -69,18 +69,19 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	bucket, err := tyrgin.GetGridFSBucket(fdb, fmt.Sprintf("%s%s", c.Param("cid"), c.Param("aid")), int32(bucketSize))
+	bucket, err := tyrgin.GetGridFSBucket(fdb, "fs", int32(bucketSize))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
-		"message":    "Failed to get assignments bucket.",
+		"message":    "Failed to get files bucket.",
 		"error":      err,
 	}) {
 		return
 	}
 
 	sid := objectid.New()
-	submittedFilesName := fmt.Sprintf("%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid)
-	err = bucket.GridFSUploadFile(sid, submittedFilesName, bytes.NewReader(submissionFiles))
+	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid.String())
+	reader := bytes.NewReader(submissionFiles)
+	err = bucket.GridFSUploadFile(sid, submittedFilesName, reader)
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to upload supporting files.",
@@ -190,6 +191,7 @@ func SubmitAssignment(c *gin.Context) {
 
 	c.JSON(201, gin.H{
 		"status_code": 201,
+		"file_name": submittedFilesName,
 		"message":     "Submission Graded.",
 	})
 }

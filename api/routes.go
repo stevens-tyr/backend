@@ -37,7 +37,7 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.CreateAssignment, "course/:cid/:section/assignment/create", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/:section/assignment/submit/:aid", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", true, tyrgin.GET),
-		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/section/assignment/download/:aid/:num", true, tyrgin.GET),
+		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/:section/assignment/:aid/submission/download/:sid/:num", true, tyrgin.GET),
 	}
 
 	tyrgin.AddRoutes(server, auth.AuthMiddleware, "1", "plague_doctor", cmsEndpoints)

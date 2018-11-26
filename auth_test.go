@@ -14,8 +14,8 @@ import (
 
 	assert "github.com/stretchr/testify/assert"
 
-	"github.com/stevens-tyr/tyr-gin"
 	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/stevens-tyr/tyr-gin"
 )
 
 func cleanUserDB(email string) {
