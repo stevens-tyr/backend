@@ -3,6 +3,7 @@ package cms
 import (
 	ctx "context"
 	"os"
+	"fmt"
 
 	"backend/models"
 
@@ -71,7 +72,9 @@ func Dashboard(c *gin.Context) {
 	var courses []models.CourseAgg
 	for cur.Next(ctx.Background()) {
 		var course map[string]models.CourseAgg
+		fmt.Println("course:", cur)
 		err = cur.Decode(&course)
+		fmt.Println(err)
 		if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 			"status_code": 500,
 			"message":     "Failed to decode course.",

@@ -22,5 +22,6 @@ type (
 		Department string            `bson:"department" json:"department" binding:"required"`
 		Number     int               `bson:"number" json:"number" binding:"required"`
 		Section    string            `bson:"section" json:"section" binding:"required"`
+		Name       string            `bson:"name" json:"name" binding:"required"`
 	}
 )

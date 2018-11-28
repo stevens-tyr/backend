@@ -1,12 +1,12 @@
 package cms
 
 import (
-	"bytes"
+	// "bytes"
 	ctx "context"
 	"fmt"
-	"net/http"
+	// "net/http"
 	"os"
-	"strconv"
+	// "strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -14,7 +14,7 @@ import (
 	"github.com/mongodb/mongo-go-driver/options"
 
 	"backend/models"
-	"backend/utils"
+	// "backend/utils"
 
 	"github.com/stevens-tyr/tyr-gin"
 )
@@ -39,76 +39,76 @@ func CreateAssignment(c *gin.Context) {
 	}
 	versionCheck(&ca)
 
-	sft, err := c.FormFile("studentFacingTests")
-	if err != nil && err != http.ErrMissingFile {
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code": 400,
-			"message":     "Problem uploading student facing tests.",
-			"error":       err,
-		})
-		return
-	}
+	// sft, err := c.FormFile("studentFacingTests")
+	// if err != nil && err != http.ErrMissingFile {
+	// 	tyrgin.ErrorHandler(err, c, 400, gin.H{
+	// 		"status_code": 400,
+	// 		"message":     "Problem uploading student facing tests.",
+	// 		"error":       err,
+	// 	})
+	// 	return
+	// }
 
-	studentTestFiles, err := utils.CheckFileType(sft)
-	if err != nil && err != utils.ErrorFileDNE {
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code":   400,
-			"message":       "Incorrect file type for student facing tests.",
-			"allowed_types": []string{".zip", ".tar.gz"},
-			"error":         err,
-		})
-		return
-	}
+	// studentTestFiles, err := utils.CheckFileType(sft)
+	// if err != nil && err != utils.ErrorFileDNE {
+	// 	tyrgin.ErrorHandler(err, c, 400, gin.H{
+	// 		"status_code":   400,
+	// 		"message":       "Incorrect file type for student facing tests.",
+	// 		"allowed_types": []string{".zip", ".tar.gz"},
+	// 		"error":         err,
+	// 	})
+	// 	return
+	// }
 
-	aft, err := c.FormFile("adminFacingTests")
-	if err != nil {
-		msg := "Problem uploading admin facing tests."
-		if err == http.ErrMissingFile {
-			msg = "Please upload an admin facing test."
-		}
+	// aft, err := c.FormFile("adminFacingTests")
+	// if err != nil {
+	// 	msg := "Problem uploading admin facing tests."
+	// 	if err == http.ErrMissingFile {
+	// 		msg = "Please upload an admin facing test."
+	// 	}
 
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code": 400,
-			"message":     msg,
-			"error":       err,
-		})
-		return
-	}
+	// 	tyrgin.ErrorHandler(err, c, 400, gin.H{
+	// 		"status_code": 400,
+	// 		"message":     msg,
+	// 		"error":       err,
+	// 	})
+	// 	return
+	// }
 
-	adminTestFiles, err := utils.CheckFileType(aft)
-	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
-		"status_code":   400,
-		"message":       "Incorrect file type for student facing tests.",
-		"allowed_types": []string{".zip", ".tar.gz"},
-		"error":         err,
-	}) {
-		return
-	}
+	// adminTestFiles, err := utils.CheckFileType(aft)
+	// if !tyrgin.ErrorHandler(err, c, 400, gin.H{
+	// 	"status_code":   400,
+	// 	"message":       "Incorrect file type for student facing tests.",
+	// 	"allowed_types": []string{".zip", ".tar.gz"},
+	// 	"error":         err,
+	// }) {
+	// 	return
+	// }
 
-	sf, err := c.FormFile("supportingFiles")
-	if err != nil {
-		msg := "Problem uploading Supporting Files for assignmnet."
-		if err == http.ErrMissingFile {
-			msg = "Please upload supporting files."
-		}
+	// sf, err := c.FormFile("supportingFiles")
+	// if err != nil {
+	// 	msg := "Problem uploading Supporting Files for assignmnet."
+	// 	if err == http.ErrMissingFile {
+	// 		msg = "Please upload supporting files."
+	// 	}
 
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code": 400,
-			"message":     msg,
-			"error":       err,
-		})
-		return
-	}
+	// 	tyrgin.ErrorHandler(err, c, 400, gin.H{
+	// 		"status_code": 400,
+	// 		"message":     msg,
+	// 		"error":       err,
+	// 	})
+	// 	return
+	// }
 
-	supportingFiles, err := utils.CheckFileType(sf)
-	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
-		"status_code":   400,
-		"message":       "Incorrect file type for student facing tests.",
-		"allowed_types": []string{".zip", ".tar.gz"},
-		"error":         err,
-	}) {
-		return
-	}
+	// supportingFiles, err := utils.CheckFileType(sf)
+	// if !tyrgin.ErrorHandler(err, c, 400, gin.H{
+	// 	"status_code":   400,
+	// 	"message":       "Incorrect file type for student facing tests.",
+	// 	"allowed_types": []string{".zip", ".tar.gz"},
+	// 	"error":         err,
+	// }) {
+	// 	return
+	// }
 
 	// mongo
 	db, err := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
@@ -133,16 +133,16 @@ func CreateAssignment(c *gin.Context) {
 		SupportingFiles: fmt.Sprintf("%s.%s.supportingFiles.tar.gz", c.Param("cid"), aid),
 		DueDate:         ca.DueDate,
 		Published:       false,
-		TestScripts: models.TestScripts{
-			StudentFacing: "",
-			AdminFacing:   fmt.Sprintf("%s.%s.adminTestFiles.tar.gz", c.Param("cid"), aid),
-		},
+		// TestScripts: models.TestScripts{
+		// 	StudentFacing: "",
+		// 	AdminFacing:   fmt.Sprintf("%s.%s.adminTestFiles.tar.gz", c.Param("cid"), aid),
+		// },
 		Submissions: make([]models.AssignmentSubmission, 0),
 	}
 
-	if len(studentTestFiles) > 0 {
-		assign.TestScripts.StudentFacing = fmt.Sprintf("%s.%s.studentTestFiles.tar.gz", c.Param("cid"), assign.ID)
-	}
+	// if len(studentTestFiles) > 0 {
+	// 	assign.TestScripts.StudentFacing = fmt.Sprintf("%s.%s.studentTestFiles.tar.gz", c.Param("cid"), assign.ID)
+	// }
 
 	_, err = assignCol.InsertOne(ctx.Background(), &assign, options.InsertOne())
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
@@ -181,61 +181,61 @@ func CreateAssignment(c *gin.Context) {
 	}
 
 	// upload files
-	fdb, err := tyrgin.GetMongoDB(os.Getenv("GRIDFS_DB_NAME"))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"status_code": 500,
-		"message":     "Failed to get Mongo Session/DB.",
-		"error":       err,
-	}) {
-		return
-	}
+	// fdb, err := tyrgin.GetMongoDB(os.Getenv("GRIDFS_DB_NAME"))
+	// if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+	// 	"status_code": 500,
+	// 	"message":     "Failed to get Mongo Session/DB.",
+	// 	"error":       err,
+	// }) {
+	// 	return
+	// }
 
-	bucketSize, err := strconv.Atoi(os.Getenv("UPLOAD_SIZE"))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to get gridfs bucket chunk size.",
-		"error":      err,
-	}) {
-		return
-	}
+	// bucketSize, err := strconv.Atoi(os.Getenv("UPLOAD_SIZE"))
+	// if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+	// 	"staus_code": 500,
+	// 	"message":    "Failed to get gridfs bucket chunk size.",
+	// 	"error":      err,
+	// }) {
+	// 	return
+	// }
 
-	bucket, err := tyrgin.GetGridFSBucket(fdb, fmt.Sprintf("%s%s", c.Param("cid"), aid), int32(bucketSize))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to get assignments bucket.",
-		"error":      err,
-	}) {
-		return
-	}
+	// bucket, err := tyrgin.GetGridFSBucket(fdb, fmt.Sprintf("%s%s", c.Param("cid"), aid), int32(bucketSize))
+	// if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+	// 	"staus_code": 500,
+	// 	"message":    "Failed to get assignments bucket.",
+	// 	"error":      err,
+	// }) {
+	// 	return
+	// }
 
-	_, err = bucket.GridFSUploadFile(assign.TestScripts.AdminFacing, bytes.NewReader(adminTestFiles))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to upload admin facing tests.",
-		"error":      err,
-	}) {
-		return
-	}
+	// _, err = bucket.GridFSUploadFile(assign.TestScripts.AdminFacing, bytes.NewReader(adminTestFiles))
+	// if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+	// 	"staus_code": 500,
+	// 	"message":    "Failed to upload admin facing tests.",
+	// 	"error":      err,
+	// }) {
+	// 	return
+	// }
 
-	_, err = bucket.GridFSUploadFile(assign.SupportingFiles, bytes.NewReader(supportingFiles))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to upload supporting files.",
-		"error":      err,
-	}) {
-		return
-	}
+	// _, err = bucket.GridFSUploadFile(assign.SupportingFiles, bytes.NewReader(supportingFiles))
+	// if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+	// 	"staus_code": 500,
+	// 	"message":    "Failed to upload supporting files.",
+	// 	"error":      err,
+	// }) {
+	// 	return
+	// }
 
-	if len(studentTestFiles) > 0 {
-		_, err = bucket.GridFSUploadFile(assign.TestScripts.StudentFacing, bytes.NewReader(studentTestFiles))
-		if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to upload student facing tests.",
-			"error":      err,
-		}) {
-			return
-		}
-	}
+	// if len(studentTestFiles) > 0 {
+	// 	_, err = bucket.GridFSUploadFile(assign.TestScripts.StudentFacing, bytes.NewReader(studentTestFiles))
+	// 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
+	// 		"staus_code": 500,
+	// 		"message":    "Failed to upload student facing tests.",
+	// 		"error":      err,
+	// 	}) {
+	// 		return
+	// 	}
+	// }
 
 	c.JSON(201, gin.H{
 		"status_code":    201,
@@ -243,3 +243,13 @@ func CreateAssignment(c *gin.Context) {
 		"assignmentLink": "url",
 	})
 }
+
+// func GetAssignment(c *gin.Context) {
+// 	cid := c.Param("cid")
+// 	aid := c.Param("aid")
+// 	sec := c.Param("section")
+
+// 	db, err := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
+// 	courseCol := tyrgin.GetMongoCollection("courses", db)
+
+// }
