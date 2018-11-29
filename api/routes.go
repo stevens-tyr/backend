@@ -34,6 +34,8 @@ func SetUp() *gin.Engine {
 	tyrgin.AddRoutes(server, auth.AuthMiddleware, "1", "auth", authEndpoints)
 
 	var cmsEndpoints = []tyrgin.APIAction{
+		tyrgin.NewRoute(cms.GetCourse, "course/:cid/", false, tyrgin.GET),
+		tyrgin.NewRoute(cms.GetAssignment, "assignment/:aid/", false, tyrgin.GET),
 		tyrgin.NewRoute(cms.CreateAssignment, "course/:cid/:section/assignment/create", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/:section/assignment/submit/:aid", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", true, tyrgin.GET),
