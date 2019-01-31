@@ -3,7 +3,6 @@ package models
 import (
 	"errors"
 
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )
 
@@ -54,8 +53,8 @@ type (
 
 	// Submission struct the struct to represent a submission to an page.
 	Submission struct {
-		ID             objectid.ObjectID  `bson:"_id" json:"id" binding:"required"`
-		UserID         objectid.ObjectID  `bson:"userID" json:"userID" binding:"required"`
+		ID             primitive.ObjectID  `bson:"_id" json:"id" binding:"required"`
+		UserID         primitive.ObjectID  `bson:"userID" json:"userID" binding:"required"`
 		AttemptNumber  int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
 		SubmissionDate primitive.DateTime `bson:"submissionDate" json:"submissionDate" binding:"required"`
 		File           string             `bson:"file" json:"file" binding:"required"`
@@ -70,14 +69,14 @@ type (
 	}
 
 	AssignmentSubmission struct {
-		UserID        objectid.ObjectID `bson:"userID" json:"userID" binding:"required"`
-		SubmissionID  objectid.ObjectID `bson:"submissionID" json:"submissionID" binding:"required"`
+		UserID        primitive.ObjectID `bson:"userID" json:"userID" binding:"required"`
+		SubmissionID  primitive.ObjectID `bson:"submissionID" json:"submissionID" binding:"required"`
 		AttemptNumber int               `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
 	}
 
 	// Assignment struct to store information about an assignment.
 	Assignment struct {
-		ID              objectid.ObjectID      `bson:"_id" json:"id" binding:"required"`
+		ID              primitive.ObjectID      `bson:"_id" json:"id" binding:"required"`
 		Language        string                 `bson:"language" json:"lanaguage" binding:"required"`
 		Version         string                 `bson:"version" json:"version" binding:"required"`
 		Name            string                 `bson:"name" json:"name" binding:"required"`
@@ -92,25 +91,25 @@ type (
 
 	// Course struct ot store information about a course.
 	Course struct {
-		ID          objectid.ObjectID   `bson:"_id,omitempty" json:"id" binding:"required"`
+		ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id" binding:"required"`
 		Department  string              `bson:"department" json:"department" binding:"required"`
 		Number      int                 `bson:"number" json:"number" binding:"required"`
 		Section     string              `bson:"section" json:"section" binding:"required"`
-		Professors  []objectid.ObjectID `bson:"professors" json:"professors" binding:"required"`
-		Assistants  []objectid.ObjectID `bson:"assistants" json:"assitants" binding:"required"`
-		Students    []objectid.ObjectID `bson:"students" json:"students" binding:"required"`
-		Assignments []objectid.ObjectID `bson:"assignments" json:"assignments" binding:"required"`
+		Professors  []primitive.ObjectID `bson:"professors" json:"professors" binding:"required"`
+		Assistants  []primitive.ObjectID `bson:"assistants" json:"assitants" binding:"required"`
+		Students    []primitive.ObjectID `bson:"students" json:"students" binding:"required"`
+		Assignments []primitive.ObjectID `bson:"assignments" json:"assignments" binding:"required"`
 	}
 
 	// EnrolledCourse struct keeps track of a user's course and enrollment type
 	EnrolledCourse struct {
-		CourseID       objectid.ObjectID `bson:"courseID" json:"courseID" binding:"required"`
+		CourseID       primitive.ObjectID `bson:"courseID" json:"courseID" binding:"required"`
 		EnrollmentType string            `bson:"enrollmentType" json:"enrollmentType" binding:"required"`
 	}
 
 	// User a default User struct to represent a User in Tyr.
 	User struct {
-		ID              objectid.ObjectID `bson:"_id,omitempty" json:"id" biding:"required"`
+		ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" biding:"required"`
 		Email           string            `bson:"email" json:"email" binding:"required"`
 		Password        []byte            `bson:"password" json:"password" binding:"required"`
 		First           string            `bson:"firstName" json:"first_name" binding:"required"`
