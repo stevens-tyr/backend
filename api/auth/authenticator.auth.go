@@ -8,7 +8,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/options"
+	"github.com/mongodb/mongo-go-driver/mongo/options"
 	bcrypt "golang.org/x/crypto/bcrypt"
 
 	"backend/models"

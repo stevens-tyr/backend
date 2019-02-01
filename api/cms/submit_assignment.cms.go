@@ -12,7 +12,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/options"
 
 	"backend/models"
@@ -78,7 +78,7 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	sid := objectid.New()
+	sid := primitive.ObjectIDNew()
 	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid.String())
 	reader := bytes.NewReader(submissionFiles)
 	err = bucket.GridFSUploadFile(sid, submittedFilesName, reader)
@@ -104,11 +104,11 @@ func SubmitAssignment(c *gin.Context) {
 
 	subCol := tyrgin.GetMongoCollection("submissions", db)
 
-	uid, _ := objectid.FromHex(claims["uid"].(string))
+	uid, _ := primitive.ObjectIDFromHex(claims["uid"].(string))
 
 	// See if previous submission exists
 	//cid := c.Param("cid")
-	aid, _ := objectid.FromHex(c.Param("aid"))
+	aid, _ := primitive.ObjectIDFromHex(c.Param("aid"))
 
 	assignCol := tyrgin.GetMongoCollection("assignments", db)
 

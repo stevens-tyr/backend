@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/options"
 
 	"backend/models"
@@ -122,7 +122,7 @@ func CreateAssignment(c *gin.Context) {
 
 	assignCol := tyrgin.GetMongoCollection("assignments", db)
 
-	aid := objectid.New()
+	aid := primitive.NewObjectID()
 	assign := models.Assignment{
 		ID:              aid,
 		Language:        ca.Language,
@@ -155,7 +155,7 @@ func CreateAssignment(c *gin.Context) {
 
 	courseCol := tyrgin.GetMongoCollection("courses", db)
 
-	cid, err := objectid.FromHex(c.Param("cid"))
+	cid, err := primitive.ObjectIDFromHex(c.Param("cid"))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Inavlid course id of course.",
@@ -208,7 +208,7 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	err = bucket.GridFSUploadFile(objectid.New(), assign.TestScripts.AdminFacing, bytes.NewReader(adminTestFiles))
+	err = bucket.GridFSUploadFile(primitive.NewObjectID(), assign.TestScripts.AdminFacing, bytes.NewReader(adminTestFiles))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to upload admin facing tests.",
@@ -217,7 +217,7 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	err = bucket.GridFSUploadFile(objectid.New(), assign.SupportingFiles, bytes.NewReader(supportingFiles))
+	err = bucket.GridFSUploadFile(primitive.NewObjectID(), assign.SupportingFiles, bytes.NewReader(supportingFiles))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"staus_code": 500,
 		"message":    "Failed to upload supporting files.",
@@ -227,7 +227,7 @@ func CreateAssignment(c *gin.Context) {
 	}
 
 	if len(studentTestFiles) > 0 {
-		err = bucket.GridFSUploadFile(objectid.New(), assign.TestScripts.StudentFacing, bytes.NewReader(studentTestFiles))
+		err = bucket.GridFSUploadFile(primitive.NewObjectID(), assign.TestScripts.StudentFacing, bytes.NewReader(studentTestFiles))
 		if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 			"staus_code": 500,
 			"message":    "Failed to upload student facing tests.",

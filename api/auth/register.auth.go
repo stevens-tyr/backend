@@ -10,7 +10,7 @@ import (
 	"github.com/goware/emailx"
 
 	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/options"
+	"github.com/mongodb/mongo-go-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 
 	"backend/models"

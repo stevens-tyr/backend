@@ -9,7 +9,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/options"
 
 	"github.com/stevens-tyr/tyr-gin"
@@ -30,7 +30,7 @@ func Dashboard(c *gin.Context) {
 
 	col := tyrgin.GetMongoCollection("users", db)
 
-	uid, err := objectid.FromHex(claims["uid"].(string))
+	uid, err := primitive.ObjectIDFromHex(claims["uid"].(string))
 	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
 		"status_code": 500,
 		"message":     "Failed to extract userid as valid mongo objectid.",
