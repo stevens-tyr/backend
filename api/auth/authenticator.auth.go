@@ -5,12 +5,12 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt"
 
-	forms "backend/forms/userforms"
+	forms "backend/forms"
 )
 
 // Authenticator a default function for a gin jwt, that authenticates a user.
 func Authenticator(c *gin.Context) (interface{}, error) {
-	var login forms.LoginForm
+	var login forms.UserLoginForm
 	if err := c.ShouldBindJSON(&login); err != nil {
 		return "Missing login values.", jwt.ErrMissingLoginValues
 	}

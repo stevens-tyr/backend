@@ -23,21 +23,18 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(auth.AuthMiddleware.LoginHandler, "login", false, tyrgin.POST),
 		tyrgin.NewRoute(auth.AuthMiddleware.RefreshHandler, "refresh_token", false, tyrgin.GET),
 		tyrgin.NewRoute(auth.Register, "register", false, tyrgin.POST),
-		tyrgin.NewRoute(func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"status_code": 200,
-				"msg":         "Success.",
-			})
-		}, "logged_in", true, tyrgin.GET),
+		tyrgin.NewRoute(auth.Check, "logged_in", true, tyrgin.GET),
 	}
 
 	tyrgin.AddRoutes(server, auth.AuthMiddleware, "1", "auth", authEndpoints)
 
 	var cmsEndpoints = []tyrgin.APIAction{
+		tyrgin.NewRoute(cms.CourseAssignments, "course/:cid/:section/assignments", true, tyrgin.GET),
 		tyrgin.NewRoute(cms.CreateAssignment, "course/:cid/:section/assignment/create", true, tyrgin.POST),
-		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/:section/assignment/submit/:aid", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", true, tyrgin.GET),
 		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/:section/assignment/:aid/submission/download/:sid/:num", true, tyrgin.GET),
+		tyrgin.NewRoute(cms.GetAssignment, "course/:cid/:section/assignment/:aid/details", true, tyrgin.GET),
+		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/:section/assignment/submit/:aid", true, tyrgin.POST),
 	}
 
 	tyrgin.AddRoutes(server, auth.AuthMiddleware, "1", "plague_doctor", cmsEndpoints)

@@ -5,7 +5,7 @@ import (
 	"github.com/goware/emailx"
 
 	"backend/models"
-	forms "backend/forms/userforms"
+	forms "backend/forms"
 
 	"github.com/stevens-tyr/tyr-gin"
 )
@@ -27,7 +27,7 @@ func isValidEmail(email string) error {
 
 // Register a function that registers a User.
 func Register(c *gin.Context) {
-	var register forms.RegisterForm
+	var register forms.UserRegisterForm
 	err := c.ShouldBindJSON(&register)
 	if err != nil {
 			tyrgin.ErrorHandler(err, c, 400, gin.H{

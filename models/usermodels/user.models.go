@@ -12,8 +12,7 @@ import (
 	bcrypt "golang.org/x/crypto/bcrypt"
 
 	"github.com/stevens-tyr/tyr-gin"
-	forms "backend/forms/userforms"
-	cmsforms "backend/forms/cmsforms"
+	"backend/forms"
 )
 
 var (
@@ -61,10 +60,10 @@ func New() *UserInterface {
 	}
 }
 
-func (m *UserInterface) FindOne(email string) (*MongoUser, error){
+func (u *UserInterface) FindOne(email string) (*MongoUser, error){
 	var user *MongoUser
 
-	res := m.col.FindOne(m.ctx, bson.M{"email": email}, options.FindOne())
+	res := u.col.FindOne(u.ctx, bson.M{"email": email}, options.FindOne())
 	res.Decode(&user)
 
 	if user == nil {
@@ -74,8 +73,8 @@ func (m *UserInterface) FindOne(email string) (*MongoUser, error){
 	return user, nil
 }
 
-func (m *UserInterface) Login(form forms.LoginForm) (interface{}, error) {
-	user, err := m.FindOne(form.Email)
+func (u *UserInterface) Login(form forms.UserLoginForm) (interface{}, error) {
+	user, err := u.FindOne(form.Email)
 	if err != nil{
 		return "User not found.", err
 	}
@@ -84,11 +83,11 @@ func (m *UserInterface) Login(form forms.LoginForm) (interface{}, error) {
 		return "Incorrect password", ErrorIncorrectPassword
 	}
 
-	return &user, nil
+	return user, nil
 }
 
-func (m *UserInterface) Register(form forms.RegisterForm) (error) {
-	user, err := m.FindOne(form.Email)
+func (u *UserInterface) Register(form forms.UserRegisterForm) (error) {
+	user, err := u.FindOne(form.Email)
 	if err != nil && err != ErrorUserNotFound {
 		return err
 	}
@@ -114,7 +113,7 @@ func (m *UserInterface) Register(form forms.RegisterForm) (error) {
 		EnrolledCourses: make([]EnrolledCourse, 0),
 	}
 
-	_, err = m.col.InsertOne(m.ctx, user, options.InsertOne())
+	_, err = u.col.InsertOne(u.ctx, user, options.InsertOne())
 	if err != nil {
 		return ErrorFailedToCreateUser
 	}
@@ -122,7 +121,7 @@ func (m *UserInterface) Register(form forms.RegisterForm) (error) {
 	return nil
 }
 
-func (m *UserInterface) GetCourses(uid primitive.ObjectID) ([]cmsforms.CourseAgg, error) {
+func (u *UserInterface) GetCourses(uid primitive.ObjectID) ([]forms.CourseAggQuery, error) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": uid}},
 		bson.M{"$unwind": "$enrolledCourses"},
@@ -143,14 +142,14 @@ func (m *UserInterface) GetCourses(uid primitive.ObjectID) ([]cmsforms.CourseAgg
 		},
 	}
 
-	var courses []cmsforms.CourseAgg
-	cur, err := m.col.Aggregate(m.ctx, query, options.Aggregate())
+	var courses []forms.CourseAggQuery
+	cur, err := u.col.Aggregate(u.ctx, query, options.Aggregate())
 	if err != nil {
 		return courses, err
 	}
 
-	for cur.Next(m.ctx) {
-		var course map[string]cmsforms.CourseAgg
+	for cur.Next(u.ctx) {
+		var course map[string]forms.CourseAggQuery
 		err = cur.Decode(&course)
 		if err != nil {
 			return courses, err
