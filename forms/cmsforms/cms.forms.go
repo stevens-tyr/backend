@@ -1,4 +1,4 @@
-package models
+package cmsforms
 
 import (
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
@@ -18,8 +18,8 @@ type (
 	// Course Aggregaton struct ot store information about a course.
 	CourseAgg struct {
 		ID         primitive.ObjectID `bson:"_id,omitempty" json:"id" binding:"required"`
-		Department string            `bson:"department" json:"department" binding:"required"`
-		Number     int               `bson:"number" json:"number" binding:"required"`
-		Section    string            `bson:"section" json:"section" binding:"required"`
+		Department string             `bson:"department" json:"department" binding:"required"`
+		Number     int                `bson:"number" json:"number" binding:"required"`
+		Section    string             `bson:"section" json:"section" binding:"required"`
 	}
 )

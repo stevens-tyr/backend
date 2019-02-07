@@ -16,7 +16,7 @@ func SetUp() *gin.Engine {
 
 	server.MaxMultipartMemory = 50 << 20
 
-	//server.Use(tyrgin.Logger())
+	server.Use(tyrgin.Logger())
 	server.Use(gin.Recovery())
 
 	var authEndpoints = []tyrgin.APIAction{
