@@ -5,7 +5,11 @@ import (
 	"time"
 
 	jwt "github.com/appleboy/gin-jwt"
+
+	"backend/models"
 )
+
+var um = models.NewMongoUserInterface()
 
 // AuthMiddleware is a jwt middleware for auth requests
 var AuthMiddleware = &jwt.GinJWTMiddleware{
@@ -14,7 +18,7 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 	Timeout:       time.Hour,
 	MaxRefresh:    time.Hour * 24,
 	Authenticator: Authenticator,
-	Authorizator:  Authorizator,
+	//Authorizator:  Authorizator,
 	PayloadFunc:   PayloadFunc,
 	Unauthorized:  Unauthorized,
 	TokenLookup:   "header:Authorization, cookie: JWTToken",

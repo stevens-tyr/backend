@@ -2,8 +2,6 @@ package cms
 
 import (
 	"bytes"
-	ctx "context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,11 +9,8 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
-	"github.com/mongodb/mongo-go-driver/options"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
-	"backend/models"
 	"backend/utils"
 
 	"github.com/stevens-tyr/tyr-gin"
@@ -33,18 +28,19 @@ func SubmitAssignment(c *gin.Context) {
 		tyrgin.ErrorHandler(err, c, 400, gin.H{
 			"status_code": 400,
 			"message":     msg,
-			"error":       err,
+			"error":       err.Error() ,
 		})
 		return
 	}
 
 	submissionFiles, err := utils.CheckFileType(sub)
-	if !tyrgin.ErrorHandler(err, c, 400, gin.H{
-		"status_code":   400,
-		"message":       "Incorrect file type for submission.",
-		"allowed_types": []string{".zip", ".tar.gz"},
-		"error":         err,
-	}) {
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
+			"status_code":   400,
+			"message":       "Incorrect file type for submission.",
+			"allowed_types": []string{".zip", ".tar.gz"},
+			"error":         err.Error(),
+		}) 
 		return
 	}
 
@@ -52,144 +48,87 @@ func SubmitAssignment(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 
 	fdb, err := tyrgin.GetMongoDB(os.Getenv("GRIDFS_DB_NAME"))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"status_code": 500,
-		"message":     "Failed to get Mongo Session/DB.",
-		"error":       err,
-	}) {
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"status_code": 500,
+			"message":     "Failed to get Mongo Session/DB.",
+			"error":       err.Error(),
+		})
 		return
 	}
 
 	bucketSize, err := strconv.Atoi(os.Getenv("UPLOAD_SIZE"))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to get gridfs bucket chunk size.",
-		"error":      err,
-	}) {
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to get gridfs bucket chunk size.",
+			"error":      err.Error(),
+		})
 		return
 	}
 
-	bucket, err := tyrgin.GetGridFSBucket(fdb, fmt.Sprintf("%s%s", c.Param("cid"), c.Param("aid")), int32(bucketSize))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to get assignments bucket.",
-		"error":      err,
-	}) {
+	bucket, err := tyrgin.GetGridFSBucket(fdb, "fs", int32(bucketSize))
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to get files bucket.",
+			"error":      err.Error(),
+		})
 		return
 	}
 
-	sid := objectid.New()
-	submittedFilesName := fmt.Sprintf("%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid)
-	_, err = bucket.GridFSUploadFile(submittedFilesName, bytes.NewReader(submissionFiles))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to upload supporting files.",
-		"error":      err,
-	}) {
+	sid := primitive.NewObjectID()
+	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid.String())
+	reader := bytes.NewReader(submissionFiles)
+	err = bucket.GridFSUploadFile(sid, submittedFilesName, reader)
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to upload supporting files.",
+			"error":      err.Error(),
+		})
 		return
 	}
 
-	// Run tests
-
-	// Mongo
-	db, err := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"status_code": 500,
-		"message":     "Failed to get Mongo Session.",
-		"error":       err,
-	}) {
-		return
-	}
-
-	subCol := tyrgin.GetMongoCollection("submissions", db)
-
-	uid, _ := objectid.FromHex(claims["uid"].(string))
+	uid, _ := primitive.ObjectIDFromHex(claims["uid"].(string))
 
 	// See if previous submission exists
 	//cid := c.Param("cid")
-	aid, _ := objectid.FromHex(c.Param("aid"))
+	aid, _ := primitive.ObjectIDFromHex(c.Param("aid"))
 
-	assignCol := tyrgin.GetMongoCollection("assignments", db)
-
-	var assign models.Assignment
-	res := assignCol.FindOne(ctx.Background(), bson.M{"_id": aid}, options.FindOne())
-
-	err = res.Decode(&assign)
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to find assignment.",
-		"error":      err,
-	}) {
-		return
-	}
-
-	var previousSub models.AssignmentSubmission
-	for _, assignSub := range assign.Submissions {
-		if assignSub.UserID == uid && assignSub.AttemptNumber > previousSub.AttemptNumber {
-			previousSub = assignSub
-		}
-	}
-
-	if previousSub.AttemptNumber+1 > assign.NumAttempts && assign.NumAttempts != 0 {
-		err = errors.New("Number of attemtps exceeded")
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code": 400,
-			"message":     "Number of attempts exceeded.",
-			"error":       err,
+	_, attempt, err := am.LatestUserSubmission(aid, uid)
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"staus_code": 500,
+			"message":    err.Error(),
 		})
 		return
 	}
 
-	// Otherwise (hardcoded values for now)
-	msub := models.Submission{
-		ID:            sid,
-		UserID:        uid,
-		AttemptNumber: previousSub.AttemptNumber + 1,
-		File:          submittedFilesName,
-		ErrorTesting:  true,
-		Cases: models.Cases{
-			StudentFacing: models.FacingTests{
-				Pass: 10,
-				Fail: 0,
-			},
-			AdminFacing: models.FacingTests{
-				Pass: 12,
-				Fail: 3,
-			},
-		},
-	}
-
-	up := models.AssignmentSubmission{
-		UserID:        uid,
-		SubmissionID:  msub.ID,
-		AttemptNumber: previousSub.AttemptNumber + 1,
-	}
-
-	_, err = subCol.InsertOne(ctx.Background(), &msub, options.InsertOne())
+	err = am.InsertSubmission(aid, uid, sid, attempt + 1)
 	if err != nil {
-		c.JSON(500, gin.H{
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"staus_code": 500,
+			"message":    "Failed to update assignment.",
+			"error":      err.Error(),
+		})
+		return
+	}
+
+	err = sm.Submit(aid, uid, sid, attempt + 1, submittedFilesName)
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
 			"staus_code": 500,
 			"message":    "Failed to create submission.",
+			"error": err.Error(),
 		})
 		return
 	}
-
-	_, err = assignCol.UpdateOne(
-		ctx.Background(),
-		bson.M{"_id": aid},
-		bson.M{"$push": bson.M{"submissions": &up}},
-		options.Update(),
-	)
-	if !tyrgin.ErrorHandler(err, c, 500, gin.H{
-		"staus_code": 500,
-		"message":    "Failed to update assignment.",
-		"error":      err,
-	}) {
-		return
-	}
+	
 
 	c.JSON(201, gin.H{
 		"status_code": 201,
+		"file_name":   submittedFilesName,
 		"message":     "Submission Graded.",
 	})
 }
