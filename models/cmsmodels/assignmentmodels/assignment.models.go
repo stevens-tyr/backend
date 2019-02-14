@@ -2,6 +2,7 @@ package assignmentmodels
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
@@ -9,35 +10,39 @@ import (
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 
+	"backend/forms"
+
 	"github.com/stevens-tyr/tyr-gin"
 )
 
 type (
-	// TestScripts struct to represent filenames on gcp storage of scripts.
-	TestScripts struct {
-		StudentFacing string `bson:"studentFacing" json:"studentFacing" binding:"required"`
-		AdminFacing   string `bson:"adminFacing" json:"adminFacing" binding:"required"`
-	}
-
 	AssignmentSubmission struct {
 		UserID        primitive.ObjectID `bson:"userID" json:"userID" binding:"required"`
 		SubmissionID  primitive.ObjectID `bson:"submissionID" json:"submissionID" binding:"required"`
 		AttemptNumber int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
 	}
 
+	Test struct {
+		Name string `bson:"name" json:"name" binding:"required"`
+ 		ExpectedOutput string `bson:"expectedOutput" json:"expectedOutput" binding:"required"`
+		StudentFacing bool `bson:"studentFacing" json:"studentFacing" binding:"exists"`
+		TestCMD string `bson:"testCMD" json:"testCMD" binding:"required"`
+	}
+
 	// Assignment struct to store information about an assignment.
 	MongoAssignment struct {
-		ID              primitive.ObjectID     `bson:"_id" json:"id" binding:"required"`
+		ID              primitive.ObjectID     `bson:"_id" json:"id"`
 		Language        string                 `bson:"language" json:"lanaguage" binding:"required"`
 		Version         string                 `bson:"version" json:"version" binding:"required"`
 		Name            string                 `bson:"name" json:"name" binding:"required"`
 		NumAttempts     int                    `bson:"numAttempts" json:"numAttempts" binding:"required"`
 		Description     string                 `bson:"description" json:"description" binding:"required"`
-		SupportingFiles string                 `bson:"supportingFiles" json:"supportingFiles" binding:"required"`
 		DueDate         primitive.DateTime     `bson:"dueDate" json:"dueDate" binding:"required"`
 		Published       bool                   `bson:"published" json:"published" binding:"required"`
-		TestScripts     TestScripts            `bson:"testScripts" json:"testScripts" binding:"required"`
-		Submissions     []AssignmentSubmission `bson:"submissions" json:"submissions" binding:"required"`
+		SupportingFiles string 					 			 `bson:"supportingFiles" json:"supportingFiles"`
+		TestBuildCMD		string 								 `bson:"TestBuildCMD" json:"testBuildCMD"`
+		Tests     			[]Test            		 `bson:"tests" json:"tests" binding:"required"`
+		Submissions     []AssignmentSubmission `bson:"submissions" json:"submissions"`
 	}
 
 	AssignmentInterface struct {
@@ -56,8 +61,34 @@ func New() *AssignmentInterface {
 	}
 }
 
-func (a *AssignmentInterface) Create() (error) {
-	return nil
+func (a *AssignmentInterface) Create(form forms.CreateAssignmentForm) (*primitive.ObjectID, error) {
+	tests := make([]Test, len(form.Tests))
+	for index := range form.Tests {
+		tests[index] = Test(form.Tests[index])
+	}
+
+	aid := primitive.NewObjectID()
+	assign := MongoAssignment{
+		ID: aid,
+ 		Language:        form.Language,
+		Version:         form.Version,
+		Name:            form.Name,
+		NumAttempts:     form.NumAttempts,
+		Description:     form.Description,
+		// SupportingFiles: fmt.Sprintf("%s.%s.supportingFiles.tar.gz", c.Param("cid"), aid),
+		DueDate:         form.DueDate,
+		Published:       false,
+		TestBuildCMD: form.TestBuildCMD,
+		Tests: tests,
+		Submissions: make([]AssignmentSubmission, 0),
+	}
+
+	_, err := a.col.InsertOne(a.ctx, assign, options.InsertOne())
+	if err != nil {
+		return nil, errors.New("FAILED TO CREATE NEW ASSIGNMENT")
+	}
+
+	return &aid, nil
 }
 
 func (a *AssignmentInterface) Get(aid primitive.ObjectID) (*MongoAssignment, error) {

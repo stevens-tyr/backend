@@ -1,44 +1,61 @@
 package cms
 
 import (
-	// "bytes"
-	// ctx "context"
-	// "fmt"
-	// "net/http"
-	// "os"
-	// "strconv"
-
 	"github.com/gin-gonic/gin"
-	// "github.com/mongodb/mongo-go-driver/bson"
-	// "github.com/mongodb/mongo-go-driver/bson/primitive"
-	// "github.com/mongodb/mongo-go-driver/mongo/options"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
-	// "backend/models"
-	// "backend/utils"
+	"backend/forms"
 
-	// "github.com/stevens-tyr/tyr-gin"
+	"github.com/stevens-tyr/tyr-gin"
 )
 
 // versionCheck a function to check the language version(Docker) of a assignment creation form.
-// func versionCheck(a *models.CreateAssignmentForm) {
-// 	if a.Version == "" {
-// 		a.Version = "latest"
-// 	}
-// }
+func versionCheck(a *forms.CreateAssignmentForm) {
+	if a.Version == "" {
+		a.Version = "latest"
+	}
+}
 
 // CreateAssignment will create an assignment and add its id to a course.
 func CreateAssignment(c *gin.Context) {
-	// var ca models.CreateAssignmentForm
-	// err := c.ShouldBind(&ca)
-	// if !tyrgin.ErrorHandler(err, c, 400, gin.H{
-	// 	"status_code": 400,
-	// 	"message":     "Invalid json.",
-	// 	"error":       err,
-	// }) {
-	// 	return
-	// }
-	// versionCheck(&ca)
+	var ca forms.CreateAssignmentForm
+	err := c.ShouldBind(&ca)
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
+			"status_code": 400,
+			"message":     "Invalid json.",
+			"error":       err.Error(),
+		})
+		return
+	}
+	versionCheck(&ca)
 
+	aid, err := am.Create(ca)
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
+			"status_code": 400,
+			"error":       err.Error(),
+		})
+		return
+	} 
+
+	cid, err := primitive.ObjectIDFromHex(c.Param("cid"))
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 500, gin.H{
+			"status_code": 500,
+			"error":       err.Error(),
+		})
+		return
+	}
+
+	err = cm.AddAssignment(*aid, cid)
+	if err != nil {
+		tyrgin.ErrorHandler(err, c, 400, gin.H{
+			"status_code": 400,
+			"error":       err.Error(),
+		})
+		return
+	} 
 	// sft, err := c.FormFile("studentFacingTests")
 	// if err != nil && err != http.ErrMissingFile {
 	// 	tyrgin.ErrorHandler(err, c, 400, gin.H{

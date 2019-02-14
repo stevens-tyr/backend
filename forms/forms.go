@@ -8,8 +8,11 @@ import (
 type (
 	AssignmentAggQuery cmsf.AssignmentAgg
 
-	CreateAssignmentForm cmsf.CreateAssignment
 	CourseAggQuery cmsf.CourseAgg
+	CourseAddUserForm cmsf.CourseAddUser
+
+	CreateAssignmentForm cmsf.CreateAssignment
+	CreateCourseForm cmsf.CreateCourse
 
 	UserLoginForm uf.LoginForm
 	UserRegisterForm uf.RegisterForm

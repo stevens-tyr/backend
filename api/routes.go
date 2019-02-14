@@ -30,7 +30,9 @@ func SetUp() *gin.Engine {
 
 	var cmsEndpoints = []tyrgin.APIAction{
 		tyrgin.NewRoute(cms.CourseAssignments, "course/:cid/:section/assignments", true, tyrgin.GET),
+		tyrgin.NewRoute(cms.CourseAddUser, "course/:cid/:section/add/user", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.CreateAssignment, "course/:cid/:section/assignment/create", true, tyrgin.POST),
+		tyrgin.NewRoute(cms.CreateCourse, "create/course", true, tyrgin.POST),
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", true, tyrgin.GET),
 		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/:section/assignment/:aid/submission/download/:sid/:num", true, tyrgin.GET),
 		tyrgin.NewRoute(cms.GetAssignment, "course/:cid/:section/assignment/:aid/details", true, tyrgin.GET),

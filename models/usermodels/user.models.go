@@ -158,3 +158,47 @@ func (u *UserInterface) GetCourses(uid primitive.ObjectID) ([]forms.CourseAggQue
 	}
 	return courses, nil
 }
+
+func (u *UserInterface) CourseExists(cid, uid primitive.ObjectID) (bool, error) {
+	filter := bson.D{
+		{"_id", uid},
+		{
+			"enrolledCourses", bson.D{
+				{
+					"$elemMatch", bson.D{{"courseID", cid}},
+				}, 
+			},
+		},
+	}
+
+	res := u.col.FindOne(
+		u.ctx,
+		filter,
+		options.FindOne(),
+	)
+	var user *MongoUser
+	err := res.Decode(&user)
+	if user != nil {
+		return true, err
+	}
+ 
+	return false, err
+}
+
+func (u *UserInterface) AddCourse(level string, cid, uid primitive.ObjectID) error {
+	alreadyEnrolled, _ := u.CourseExists(cid, uid)
+	if alreadyEnrolled {
+		return errors.New("USER ALREADY ENROLLED")
+	}
+	_, err := u.col.UpdateOne(
+		u.ctx,
+		bson.M{"_id": uid},
+		bson.M{"$push": bson.M{"enrolledCourses": bson.M{"courseID": cid, "enrollmentType": level}}},
+		options.Update(),
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

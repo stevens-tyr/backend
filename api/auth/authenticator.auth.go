@@ -5,7 +5,7 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt"
 
-	forms "backend/forms"
+	"backend/forms"
 )
 
 // Authenticator a default function for a gin jwt, that authenticates a user.
