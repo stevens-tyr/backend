@@ -6,7 +6,6 @@ import (
 
 func Check(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"status_code": 200,
-		"msg":         "Success.",
+		"message": "Success.",
 	})
 }

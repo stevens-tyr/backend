@@ -2,48 +2,82 @@ package auth
 
 import (
 	"fmt"
-
-	jwt "github.com/appleboy/gin-jwt"
-	"github.com/gin-gonic/gin"
-
 	"strings"
+
+	"github.com/appleboy/gin-jwt"
+	"github.com/gin-gonic/gin"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )
 
-func allowed(perm, level string, claims map[string]interface{}) bool {
-	fmt.Println(perm, level)
-	for _, course := range claims["courses"].([]interface{}) {
-		if perm == course.(map[string]interface{})["courseID"] && level == course.(map[string]interface{})["enrollmentType"] {
-			return true
+func allowed(level string, claims map[string]interface{}, c *gin.Context) bool {
+	enrolledCourses := claims["courses"].(map[string]interface{})
+	uid := claims["uid"]
+	cid, _ := c.Get("cids")
+	sid, exists := c.Get("sid")
+	allowed := false
+
+	if val, found := enrolledCourses[cid.(string)]; found && (level == "any" || val == level) {
+		allowed = true
+	}
+
+	if level == "student" && exists {
+		sub, err := sm.GetUsersSubmission(sid, uid)
+		if err != nil {
+			fmt.Println("err", err)
+		}
+		if sub != nil {
+			allowed = true
 		}
 	}
 
-	return false
+	return allowed
 }
 
 func determineLevel(route string) string {
-	if strings.Contains(route, "create") {
-		return "teacher"
+	if _, found := routeLevels["admin"][route]; found {
+		return "admin"
 	}
 
-	if strings.Contains(route, "submit") {
+	if _, found := routeLevels["any"][route]; found {
+		return "any"
+	}
+
+	if _, found := routeLevels["assitant"][route]; found {
+		return "assitant"
+	}
+
+	if _, found := routeLevels["professor"][route]; found {
+		return "professor"
+	}
+
+	if _, found := routeLevels["student"][route]; found {
 		return "student"
 	}
 
-	return ""
+	return "whitelisted"
 }
 
 // Authorizator a default function for a gin jwt, that authorizes a user.
 func Authorizator(d interface{}, c *gin.Context) bool {
+	route := strings.TrimPrefix(c.Request.URL.String(), "/api/v1/plague_doctor/")
+	for _, p := range c.Params {
+		route = strings.Replace(route, p.Value, ":"+p.Key, 1)
+	}
 	claims := jwt.ExtractClaims(c)
-	// aid := c.Param("aid")
-	cid := c.Param("cid")
+	uids := claims["uid"].(string)
+	val, _ := primitive.ObjectIDFromHex(uids)
+	c.Set("uid", val)
 
-	userShouldBe := determineLevel(c.Request.URL.String())
-	fmt.Println("usb", userShouldBe)
-
-	if cid != "" {
-		return allowed(cid, userShouldBe, claims)
+	userLevelForRouteShouldBe := determineLevel(route)
+	fmt.Println("user level:", userLevelForRouteShouldBe, route)
+	if userLevelForRouteShouldBe == "whitelisted" {
+		return true
 	}
 
-	return true
+	admin := claims["admin"].(bool)
+	if userLevelForRouteShouldBe == "admin" && admin {
+		return true
+	}
+
+	return allowed(userLevelForRouteShouldBe, claims, c)
 }

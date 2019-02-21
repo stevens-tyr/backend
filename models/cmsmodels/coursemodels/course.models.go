@@ -1,24 +1,18 @@
 package assignmentmodels
 
 import (
- 	"context"
- 	"errors"
- 	"os"
+	"context"
+	"os"
 
-	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
+	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 
+	"backend/errors"
 	"backend/forms"
 
 	"github.com/stevens-tyr/tyr-gin"
-)
-
-var (
-	ErrorCourseNotFound = errors.New("COURSE DOES NOT EXIST")
-	ErrorCourseAlreadyExists = errors.New("COURSE ALREADY EXISTS")
-	ErrorFailedToCreateCourse = errors.New("FAILED TO CREATE COURSE")
 )
 
 // Course struct ot store information about a course.
@@ -27,7 +21,7 @@ type MongoCourse struct {
 	Department  string               `bson:"department" json:"department" binding:"required"`
 	Number      int                  `bson:"number" json:"number" binding:"required"`
 	Section     string               `bson:"section" json:"section" binding:"required"`
-	Semester		string								`bson:"semester" json:"semester" binding:"required"`
+	Semester    string               `bson:"semester" json:"semester" binding:"required"`
 	Professors  []primitive.ObjectID `bson:"professors" json:"professors" binding:"required"`
 	Assistants  []primitive.ObjectID `bson:"assistants" json:"assitants" binding:"required"`
 	Students    []primitive.ObjectID `bson:"students" json:"students" binding:"required"`
@@ -41,7 +35,7 @@ type CourseInterface struct {
 
 func New() *CourseInterface {
 	db, _ := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	col := tyrgin.GetMongoCollection("courses", db) 
+	col := tyrgin.GetMongoCollection("courses", db)
 
 	return &CourseInterface{
 		context.Background(),
@@ -49,66 +43,66 @@ func New() *CourseInterface {
 	}
 }
 
-func (c *CourseInterface) FindOne(department, section, semester string, number int) (*MongoCourse, error) {
+func (c *CourseInterface) FindOne(department, section, semester string, number int) (*MongoCourse, errors.APIError) {
 	var course *MongoCourse
 
 	res := c.col.FindOne(
 		c.ctx,
 		bson.M{
 			"department": department,
-			"number": number,
-			"section": section,
-			"semester": semester,
+			"number":     number,
+			"section":    section,
+			"semester":   semester,
 		},
 		options.FindOne(),
 	)
 	res.Decode(&course)
 
 	if course == nil {
-		return nil,  ErrorCourseNotFound
+		return nil, errors.ErrorResourceNotFound
 	}
 
 	return course, nil
 }
 
-func (c *CourseInterface) Create(uid primitive.ObjectID, form forms.CreateCourseForm) (*primitive.ObjectID, error) {
+func (c *CourseInterface) Create(uid interface{}, form forms.CreateCourseForm) (*primitive.ObjectID, errors.APIError) {
 	course, err := c.FindOne(
 		form.Department,
 		form.Section,
 		form.Semester,
 		form.Number,
 	)
-	if err != nil && err != ErrorCourseNotFound {
+	if err != nil && err != errors.ErrorResourceNotFound {
 		return nil, err
 	}
 
 	if course != nil {
-		return nil, ErrorCourseAlreadyExists
+		return nil, errors.ErrorCannotCreateDuplicateData
 	}
 
-	professors := []primitive.ObjectID{uid}
+	professors := []primitive.ObjectID{uid.(primitive.ObjectID)}
 
 	course = &MongoCourse{
-		Department: form.Department,
-		Number: form.Number,
-		Section: form.Section,
-		Semester: form.Semester,
-		Professors: professors,
-		Assistants: make([]primitive.ObjectID, 0),
-		Students: make([]primitive.ObjectID, 0),
+		Department:  form.Department,
+		Number:      form.Number,
+		Section:     form.Section,
+		Semester:    form.Semester,
+		Professors:  professors,
+		Assistants:  make([]primitive.ObjectID, 0),
+		Students:    make([]primitive.ObjectID, 0),
 		Assignments: make([]primitive.ObjectID, 0),
 	}
 
-	res, err := c.col.InsertOne(c.ctx, course, options.InsertOne())
-	if err != nil {
-		return nil, ErrorFailedToCreateCourse
+	res, errs := c.col.InsertOne(c.ctx, course, options.InsertOne())
+	if errs != nil {
+		return nil, errors.ErrorDatabaseFailedCreate
 	}
 
 	cid := res.InsertedID.(primitive.ObjectID)
 	return &cid, nil
 }
 
-func (c *CourseInterface) UserExists(cid, uid primitive.ObjectID) (bool, error) {
+func (c *CourseInterface) UserExists(cid, uid interface{}) (bool, errors.APIError) {
 	filter := bson.D{
 		{"_id", cid},
 		{
@@ -127,47 +121,54 @@ func (c *CourseInterface) UserExists(cid, uid primitive.ObjectID) (bool, error) 
 	)
 	var course *MongoCourse
 	err := res.Decode(&course)
-
-	if course != nil {
-		return true, err
+	if err != nil {
+		return false, errors.ErrorResourceNotFound
 	}
 
-	return false, err
+	if course != nil {
+		return true, nil
+	}
+
+	return false, nil
 }
 
-func (c *CourseInterface) AddUser(level string, uid, cid primitive.ObjectID) error {
-	userAlreadyInCourse, _ := c.UserExists(cid, uid)
+func (c *CourseInterface) AddUser(level string, uid, cid interface{}) errors.APIError {
+	userAlreadyInCourse, err := c.UserExists(cid, uid)
+	if err != nil {
+		return err
+	}
+
 	if userAlreadyInCourse {
-		return errors.New("USER ALREADY IN COURSE")
+		return errors.ErrorUserAlreadyEnrolled
 	}
 
 	var tag string
 	switch level {
-		case "student":
-			tag = "students"
-			break
-		case "assitant":
-			tag = "assitants"
-			break
-		case "professor":
-			tag = "professors"
-			break
+	case "student":
+		tag = "students"
+		break
+	case "assitant":
+		tag = "assitants"
+		break
+	case "professor":
+		tag = "professors"
+		break
 	}
 
-	_, err := c.col.UpdateOne(
+	_, errs := c.col.UpdateOne(
 		c.ctx,
 		bson.M{"_id": cid},
 		bson.M{"$push": bson.M{tag: uid}},
 		options.Update(),
 	)
-	if err != nil {
-		return err
+	if errs != nil {
+		return errors.ErrorDatabaseFailedUpdate
 	}
 
 	return nil
 }
 
-func (c *CourseInterface) AddAssignment(aid, cid primitive.ObjectID) (error) {
+func (c *CourseInterface) AddAssignment(aid, cid interface{}) errors.APIError {
 	_, err := c.col.UpdateOne(
 		c.ctx,
 		bson.M{"_id": cid},
@@ -175,13 +176,13 @@ func (c *CourseInterface) AddAssignment(aid, cid primitive.ObjectID) (error) {
 		options.Update(),
 	)
 	if err != nil {
-		return err
+		return errors.ErrorDatabaseFailedUpdate
 	}
 
 	return nil
 }
 
-func (c *CourseInterface) GetAssignments(cid primitive.ObjectID) ([]forms.AssignmentAggQuery, error) {
+func (c *CourseInterface) GetAssignments(cid interface{}) ([]forms.AssignmentAggQuery, errors.APIError) {
 	var assignments []forms.AssignmentAggQuery
 
 	query := []interface{}{
@@ -206,16 +207,16 @@ func (c *CourseInterface) GetAssignments(cid primitive.ObjectID) ([]forms.Assign
 
 	cur, err := c.col.Aggregate(c.ctx, query, options.Aggregate())
 	if err != nil {
-		return assignments, err
+		return assignments, errors.ErrorDatabaseFailedQuery
 	}
 
 	for cur.Next(c.ctx) {
 		var assignment map[string]forms.AssignmentAggQuery
 		err = cur.Decode(&assignment)
 		if err != nil {
-			return assignments, err
+			return assignments, errors.ErrorInvlaidBSON
 		}
-		if !assignment["assignment"].Published {
+		if assignment["assignment"].Published {
 			assignments = append(assignments, assignment["assignment"])
 		}
 	}

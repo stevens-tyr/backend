@@ -3,14 +3,14 @@ package models
 import (
 	am "backend/models/cmsmodels/assignmentmodels"
 	cm "backend/models/cmsmodels/coursemodels"
-	um "backend/models/usermodels"
 	sm "backend/models/cmsmodels/submissionmodels"
+	um "backend/models/usermodels"
 )
 
 type (
 	Assignment am.MongoAssignment
-	Course cm.MongoCourse
-	User um.MongoUser
+	Course     cm.MongoCourse
+	User       um.MongoUser
 	Submission sm.MongoSubmission
 )
 

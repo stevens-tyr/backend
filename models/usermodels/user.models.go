@@ -1,29 +1,19 @@
 package usermodels
 
 import (
-	"errors"
 	"context"
 	"os"
 
-	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
+	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 	bcrypt "golang.org/x/crypto/bcrypt"
 
-	"github.com/stevens-tyr/tyr-gin"
+	"backend/errors"
 	"backend/forms"
-)
 
-var (
-	// UserNotFoundError an error to throw for when a User is not found.
-	ErrorUserNotFound = errors.New("USER DOES NOT EXIST")
-	// IncorrectPasswordError an error to throw for when an inccorect passowrd is entered.
-	ErrorIncorrectPassword = errors.New("INCORRECT PASSWORD")
-	// ErrorNonMatchingPassword an error to throw when a password cofirmation does not match the password.
-	ErrorNonMatchingPassword = errors.New("CONFIRMATION MUST MATCH")
-	// ErrorFailedToCreateUser an error for when you fail to create a user.
-	ErrorFailedToCreateUser = errors.New("FAILED TO CREATE USER")
+	"github.com/stevens-tyr/tyr-gin"
 )
 
 type (
@@ -36,6 +26,7 @@ type (
 	// User a default User struct to represent a User in Tyr.
 	MongoUser struct {
 		ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" biding:"required"`
+		Admin           bool               `bson:"admin" json:"admin`
 		Email           string             `bson:"email" json:"email" binding:"required"`
 		Password        []byte             `bson:"password" json:"password" binding:"required"`
 		First           string             `bson:"firstName" json:"first_name" binding:"required"`
@@ -44,15 +35,25 @@ type (
 	}
 
 	// A struct to represent a bunch of User functions.
-	UserInterface struct{
+	UserInterface struct {
 		ctx context.Context
 		col *mongo.Collection
 	}
 )
 
+func (m *MongoUser) CoursesAsMap() map[string]string {
+	courses := make(map[string]string)
+
+	for _, course := range m.EnrolledCourses {
+		courses[course.CourseID.Hex()] = course.EnrollmentType
+	}
+
+	return courses
+}
+
 func New() *UserInterface {
 	db, _ := tyrgin.GetMongoDB(os.Getenv("DB_NAME"))
-	col := tyrgin.GetMongoCollection("users", db) 
+	col := tyrgin.GetMongoCollection("users", db)
 
 	return &UserInterface{
 		context.Background(),
@@ -60,68 +61,69 @@ func New() *UserInterface {
 	}
 }
 
-func (u *UserInterface) FindOne(email string) (*MongoUser, error){
+func (u *UserInterface) FindOne(email string) (*MongoUser, errors.APIError) {
 	var user *MongoUser
 
 	res := u.col.FindOne(u.ctx, bson.M{"email": email}, options.FindOne())
 	res.Decode(&user)
 
 	if user == nil {
-		return nil, ErrorUserNotFound
+		return nil, errors.ErrorResourceNotFound
 	}
 
 	return user, nil
 }
 
-func (u *UserInterface) Login(form forms.UserLoginForm) (interface{}, error) {
+func (u *UserInterface) Login(form forms.UserLoginForm) (interface{}, errors.APIError) {
 	user, err := u.FindOne(form.Email)
-	if err != nil{
+	if err != nil {
 		return "User not found.", err
 	}
 
-	if err = bcrypt.CompareHashAndPassword(user.Password, []byte(form.Password)); err != nil {
-		return "Incorrect password", ErrorIncorrectPassword
+	if er := bcrypt.CompareHashAndPassword(user.Password, []byte(form.Password)); er != nil {
+		return "Incorrect password", errors.ErrorIncorrectCredentials
 	}
 
 	return user, nil
 }
 
-func (u *UserInterface) Register(form forms.UserRegisterForm) (error) {
+func (u *UserInterface) Register(form forms.UserRegisterForm) errors.APIError {
 	user, err := u.FindOne(form.Email)
-	if err != nil && err != ErrorUserNotFound {
+	if err != nil && err != errors.ErrorResourceNotFound {
 		return err
 	}
 
 	if user != nil {
-		return errors.New("user with email already exists")
+		return errors.ErrorCannotCreateDuplicateData
 	}
 
 	if form.Password != form.PasswordConfirmation {
-		return ErrorNonMatchingPassword
+		return errors.ErrorIncorrectCredentials
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(form.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil
+	hash, errs := bcrypt.GenerateFromPassword([]byte(form.Password), bcrypt.DefaultCost)
+	if errs != nil {
+		return errors.ErrorHashFailure
 	}
 
 	user = &MongoUser{
 		Email:           form.Email,
+		Admin:           false,
 		Password:        hash,
 		First:           form.First,
 		Last:            form.Last,
 		EnrolledCourses: make([]EnrolledCourse, 0),
 	}
 
-	_, err = u.col.InsertOne(u.ctx, user, options.InsertOne())
-	if err != nil {
-		return ErrorFailedToCreateUser
+	_, errs = u.col.InsertOne(u.ctx, user, options.InsertOne())
+	if errs != nil {
+		return errors.ErrorDatabaseFailedCreate
 	}
 
 	return nil
 }
 
-func (u *UserInterface) GetCourses(uid primitive.ObjectID) ([]forms.CourseAggQuery, error) {
+func (u *UserInterface) GetCourses(uid interface{}) ([]forms.CourseAggQuery, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": uid}},
 		bson.M{"$unwind": "$enrolledCourses"},
@@ -145,28 +147,28 @@ func (u *UserInterface) GetCourses(uid primitive.ObjectID) ([]forms.CourseAggQue
 	var courses []forms.CourseAggQuery
 	cur, err := u.col.Aggregate(u.ctx, query, options.Aggregate())
 	if err != nil {
-		return courses, err
+		return courses, errors.ErrorDatabaseFailedQuery
 	}
 
 	for cur.Next(u.ctx) {
 		var course map[string]forms.CourseAggQuery
 		err = cur.Decode(&course)
 		if err != nil {
-			return courses, err
+			return courses, errors.ErrorDatabaseFailedExtract
 		}
 		courses = append(courses, course["course"])
 	}
 	return courses, nil
 }
 
-func (u *UserInterface) CourseExists(cid, uid primitive.ObjectID) (bool, error) {
+func (u *UserInterface) CourseExists(cid, uid interface{}) (bool, errors.APIError) {
 	filter := bson.D{
 		{"_id", uid},
 		{
 			"enrolledCourses", bson.D{
 				{
 					"$elemMatch", bson.D{{"courseID", cid}},
-				}, 
+				},
 			},
 		},
 	}
@@ -178,17 +180,20 @@ func (u *UserInterface) CourseExists(cid, uid primitive.ObjectID) (bool, error) 
 	)
 	var user *MongoUser
 	err := res.Decode(&user)
-	if user != nil {
-		return true, err
+	if err != nil {
+		return false, errors.ErrorDatabaseFailedExtract
 	}
- 
-	return false, err
+	if user != nil {
+		return true, nil
+	}
+
+	return false, nil
 }
 
-func (u *UserInterface) AddCourse(level string, cid, uid primitive.ObjectID) error {
+func (u *UserInterface) AddCourse(level string, cid, uid interface{}) errors.APIError {
 	alreadyEnrolled, _ := u.CourseExists(cid, uid)
 	if alreadyEnrolled {
-		return errors.New("USER ALREADY ENROLLED")
+		return errors.ErrorUserAlreadyEnrolled
 	}
 	_, err := u.col.UpdateOne(
 		u.ctx,
@@ -197,7 +202,7 @@ func (u *UserInterface) AddCourse(level string, cid, uid primitive.ObjectID) err
 		options.Update(),
 	)
 	if err != nil {
-		return err
+		return errors.ErrorDatabaseFailedQuery
 	}
 
 	return nil

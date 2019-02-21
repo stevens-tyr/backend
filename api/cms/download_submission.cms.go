@@ -58,7 +58,7 @@ func DownloadSubmission(c *gin.Context) {
 
 	file, err := bucket.GridFSDownloadFile(fileID)
 	fmt.Println("after", fileID, err)
-	if err != nil{
+	if err != nil {
 		tyrgin.ErrorHandler(err, c, 500, gin.H{
 			"staus_code": 500,
 			"message":    "Failed to get submission.",

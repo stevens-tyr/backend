@@ -3,7 +3,8 @@ package cms
 import (
 	"bytes"
 	"fmt"
-	"net/http"
+
+	// "net/http"
 	"os"
 	"strconv"
 
@@ -20,27 +21,24 @@ import (
 func SubmitAssignment(c *gin.Context) {
 	sub, err := c.FormFile("submission")
 	if err != nil {
-		msg := "Problem uploading submission."
-		if err == http.ErrMissingFile {
-			msg = "Please upload your submission."
-		}
+		// msg := "Problem uploading submission."
+		// if err == http.ErrMissingFile {
+		// 	msg = "Please upload your submission."
+		// }
 
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code": 400,
-			"message":     msg,
-			"error":       err.Error() ,
-		})
+		c.Set("error", err)
 		return
 	}
 
 	submissionFiles, err := utils.CheckFileType(sub)
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 400, gin.H{
-			"status_code":   400,
-			"message":       "Incorrect file type for submission.",
-			"allowed_types": []string{".zip", ".tar.gz"},
-			"error":         err.Error(),
-		}) 
+		c.Set("error", err)
+		// tyrgin.ErrorHandler(err, c, 400, gin.H{
+		// 	"status_code":   400,
+		// 	"message":       "Incorrect file type for submission.",
+		// 	"allowed_types": []string{".zip", ".tar.gz"},
+		// 	"error":         err.Error(),
+		// })
 		return
 	}
 
@@ -49,82 +47,54 @@ func SubmitAssignment(c *gin.Context) {
 
 	fdb, err := tyrgin.GetMongoDB(os.Getenv("GRIDFS_DB_NAME"))
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"status_code": 500,
-			"message":     "Failed to get Mongo Session/DB.",
-			"error":       err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
 
 	bucketSize, err := strconv.Atoi(os.Getenv("UPLOAD_SIZE"))
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to get gridfs bucket chunk size.",
-			"error":      err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
 
 	bucket, err := tyrgin.GetGridFSBucket(fdb, "fs", int32(bucketSize))
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to get files bucket.",
-			"error":      err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
 
 	sid := primitive.NewObjectID()
-	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"].(string), sid.String())
+	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"], sid.String())
 	reader := bytes.NewReader(submissionFiles)
 	err = bucket.GridFSUploadFile(sid, submittedFilesName, reader)
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to upload supporting files.",
-			"error":      err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
 
-	uid, _ := primitive.ObjectIDFromHex(claims["uid"].(string))
+	uid, _ := claims["uid"]
 
 	// See if previous submission exists
 	//cid := c.Param("cid")
-	aid, _ := primitive.ObjectIDFromHex(c.Param("aid"))
+	aid, _ := c.Get("aid")
 
 	_, attempt, err := am.LatestUserSubmission(aid, uid)
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
 
-	err = am.InsertSubmission(aid, uid, sid, attempt + 1)
+	err = am.InsertSubmission(aid, uid, sid, attempt+1)
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to update assignment.",
-			"error":      err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
 
-	err = sm.Submit(aid, uid, sid, attempt + 1, submittedFilesName)
+	err = sm.Submit(aid, uid, sid, attempt+1, submittedFilesName)
 	if err != nil {
-		tyrgin.ErrorHandler(err, c, 500, gin.H{
-			"staus_code": 500,
-			"message":    "Failed to create submission.",
-			"error": err.Error(),
-		})
+		c.Set("error", err)
 		return
 	}
-	
 
 	c.JSON(201, gin.H{
 		"status_code": 201,
