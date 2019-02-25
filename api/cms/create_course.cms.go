@@ -25,7 +25,7 @@ func CreateCourse(c *gin.Context) {
 		return
 	}
 
-	err = um.AddCourse("professor", *cid, uid)
+	err = um.AddCourse("teacher", *cid, uid)
 	if err != nil {
 		c.Set("error", err)
 		return
@@ -38,9 +38,8 @@ func CreateCourse(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"status_code": 200,
-		"msg":         "Course created.",
-		"token":       token,
-		"expire":      expire,
+		"message": "Course created.",
+		"token":   token,
+		"expire":  expire,
 	})
 }

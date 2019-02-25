@@ -80,7 +80,12 @@ func (c *CourseInterface) Create(uid interface{}, form forms.CreateCourseForm) (
 		return nil, errors.ErrorCannotCreateDuplicateData
 	}
 
-	professors := []primitive.ObjectID{uid.(primitive.ObjectID)}
+	uids := uid.(string)
+	val, errs := primitive.ObjectIDFromHex(uids)
+	if errs != nil {
+		return nil, errors.ErrorInvalidObjectID
+	}
+	professors := []primitive.ObjectID{val}
 
 	course = &MongoCourse{
 		Department:  form.Department,

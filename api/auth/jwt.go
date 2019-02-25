@@ -35,23 +35,21 @@ var AuthMiddleware, _ = jwt.New(&jwt.GinJWTMiddleware{
 })
 
 var routeLevels = map[string]map[string]string{
-	"admin": map[string]string{
+	"admin": {
 		"create/course": "CreateCourse",
 	},
-	"any": map[string]string{
+	"any": {
 		"course/:cid/:section/assignments":                                   "CourseAssignments",
 		"course/:cid/:section/assignment/:aid/submission/download/:sid/:num": "DownloadSubmission",
 		"course/:cid/:section/assignment/:aid/details":                       "GetAssignment",
 	},
-	"assitant": map[string]string{
-		"course/:cid/:section/add/user":          "CourseAddUser",
-		"course/:cid/:section/assignment/create": "CreateAssignment",
+	"teacher": {
+		"course/:cid/:section/add/user":             "CourseAddUser",
+		"course/:cid/:section/add/users":            "CourseAddUsers",
+		"course/:cid/:section/assignment/create":    "CreateAssignment",
+		"course/:cid/:section/assignment/:aid/file": "AssignmentAsFile",
 	},
-	"professor": map[string]string{
-		"course/:cid/:section/add/user":          "CourseAddUser",
-		"course/:cid/:section/assignment/create": "CreateAssignment",
-	},
-	"student": map[string]string{
+	"student": {
 		"course/:cid/:section/assignment/submit/:aid": "SubmitAssignment",
 	},
 }

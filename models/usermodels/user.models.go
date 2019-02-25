@@ -2,6 +2,7 @@ package usermodels
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -66,6 +67,7 @@ func (u *UserInterface) FindOne(email string) (*MongoUser, errors.APIError) {
 
 	res := u.col.FindOne(u.ctx, bson.M{"email": email}, options.FindOne())
 	res.Decode(&user)
+	fmt.Println("user", user)
 
 	if user == nil {
 		return nil, errors.ErrorResourceNotFound
@@ -195,6 +197,7 @@ func (u *UserInterface) AddCourse(level string, cid, uid interface{}) errors.API
 	if alreadyEnrolled {
 		return errors.ErrorUserAlreadyEnrolled
 	}
+
 	_, err := u.col.UpdateOne(
 		u.ctx,
 		bson.M{"_id": uid},
@@ -202,7 +205,7 @@ func (u *UserInterface) AddCourse(level string, cid, uid interface{}) errors.API
 		options.Update(),
 	)
 	if err != nil {
-		return errors.ErrorDatabaseFailedQuery
+		return errors.ErrorDatabaseFailedUpdate
 	}
 
 	return nil

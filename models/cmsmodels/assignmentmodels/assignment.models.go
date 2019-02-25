@@ -1,7 +1,10 @@
 package assignmentmodels
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -31,18 +34,18 @@ type (
 
 	// Assignment struct to store information about an assignment.
 	MongoAssignment struct {
-		ID              primitive.ObjectID     `bson:"_id" json:"id"`
-		Language        string                 `bson:"language" json:"lanaguage" binding:"required"`
-		Version         string                 `bson:"version" json:"version" binding:"required"`
-		Name            string                 `bson:"name" json:"name" binding:"required"`
-		NumAttempts     int                    `bson:"numAttempts" json:"numAttempts" binding:"required"`
-		Description     string                 `bson:"description" json:"description" binding:"required"`
-		DueDate         primitive.DateTime     `bson:"dueDate" json:"dueDate" binding:"required"`
-		Published       bool                   `bson:"published" json:"published" binding:"required"`
-		SupportingFiles string                 `bson:"supportingFiles" json:"supportingFiles"`
-		TestBuildCMD    string                 `bson:"TestBuildCMD" json:"testBuildCMD"`
-		Tests           []Test                 `bson:"tests" json:"tests" binding:"required"`
-		Submissions     []AssignmentSubmission `bson:"submissions" json:"submissions"`
+		ID              primitive.ObjectID     `bson:"_id" form:"id" json:"-"`
+		Language        string                 `bson:"language" form:"lanaguage" binding:"required" json:"language"`
+		Version         string                 `bson:"version" form:"version" binding:"required" json:"version"`
+		Name            string                 `bson:"name" form:"name" binding:"required" json:"name"`
+		NumAttempts     int                    `bson:"numAttempts" form:"numAttempts" binding:"required" json:"numAttempts"`
+		Description     string                 `bson:"description" form:"description" binding:"required" json:"description"`
+		DueDate         primitive.DateTime     `bson:"dueDate" form:"dueDate" binding:"required" json:"-"`
+		Published       bool                   `bson:"published" form:"published" binding:"required" json:"-"`
+		SupportingFiles string                 `bson:"supportingFiles" form:"supportingFiles" json:"-"`
+		TestBuildCMD    string                 `bson:"testBuildCMD" form:"testBuildCMD" json:"testBuildCMD"`
+		Tests           []Test                 `bson:"tests" form:"tests" binding:"required" json:"tests"`
+		Submissions     []AssignmentSubmission `bson:"submissions" form:"submissions" json:"-"`
 	}
 
 	AssignmentInterface struct {
@@ -61,34 +64,35 @@ func New() *AssignmentInterface {
 	}
 }
 
-func (a *AssignmentInterface) Create(form forms.CreateAssignmentForm) (*primitive.ObjectID, errors.APIError) {
+func (a *AssignmentInterface) Create(form forms.CreateAssignmentForm, cid string) (*primitive.ObjectID, string, errors.APIError) {
 	tests := make([]Test, len(form.Tests))
 	for index := range form.Tests {
 		tests[index] = Test(form.Tests[index])
 	}
 
 	aid := primitive.NewObjectID()
+	supportingFiles := fmt.Sprintf("%s.%s.supportingFiles.tar.gz", cid, aid)
 	assign := MongoAssignment{
-		ID:          aid,
-		Language:    form.Language,
-		Version:     form.Version,
-		Name:        form.Name,
-		NumAttempts: form.NumAttempts,
-		Description: form.Description,
-		// SupportingFiles: fmt.Sprintf("%s.%s.supportingFiles.tar.gz", c.Param("cid"), aid),
-		DueDate:      form.DueDate,
-		Published:    false,
-		TestBuildCMD: form.TestBuildCMD,
-		Tests:        tests,
-		Submissions:  make([]AssignmentSubmission, 0),
+		ID:              aid,
+		Language:        form.Language,
+		Version:         form.Version,
+		Name:            form.Name,
+		NumAttempts:     form.NumAttempts,
+		Description:     form.Description,
+		SupportingFiles: supportingFiles,
+		DueDate:         form.DueDate,
+		Published:       false,
+		TestBuildCMD:    form.TestBuildCMD,
+		Tests:           tests,
+		Submissions:     make([]AssignmentSubmission, 0),
 	}
 
 	_, err := a.col.InsertOne(a.ctx, assign, options.InsertOne())
 	if err != nil {
-		return nil, errors.ErrorDatabaseFailedCreate
+		return nil, "", errors.ErrorDatabaseFailedCreate
 	}
 
-	return &aid, nil
+	return &aid, supportingFiles, nil
 }
 
 func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.APIError) {
@@ -137,4 +141,19 @@ func (a *AssignmentInterface) InsertSubmission(aid, sid, uid interface{}, attemp
 	}
 
 	return nil
+}
+
+func (a *AssignmentInterface) AsFile(aid interface{}) (*bytes.Reader, string, int64, errors.APIError) {
+	var jsonBytes []byte
+	assignment, err := a.Get(aid)
+	if err != nil {
+		return nil, "", 0, err
+	}
+
+	jsonBytes, errs := json.Marshal(assignment)
+	if errs != nil {
+		return nil, "", 0, errors.ErrorFailedToConvertStructToJSON
+	}
+
+	return bytes.NewReader(jsonBytes), assignment.Name, int64(len(jsonBytes)), nil
 }

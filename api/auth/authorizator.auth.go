@@ -16,8 +16,11 @@ func allowed(level string, claims map[string]interface{}, c *gin.Context) bool {
 	sid, exists := c.Get("sid")
 	allowed := false
 
-	if val, found := enrolledCourses[cid.(string)]; found && (level == "any" || val == level) {
-		allowed = true
+	val, found := enrolledCourses[cid.(string)]
+	fmt.Println("cid:", cid, level, val)
+	if found && (level == "any" || val == level) {
+		fmt.Println("yooooo")
+		return true
 	}
 
 	if level == "student" && exists {
@@ -46,8 +49,8 @@ func determineLevel(route string) string {
 		return "assitant"
 	}
 
-	if _, found := routeLevels["professor"][route]; found {
-		return "professor"
+	if _, found := routeLevels["teacher"][route]; found {
+		return "teacher"
 	}
 
 	if _, found := routeLevels["student"][route]; found {
@@ -63,6 +66,7 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 	for _, p := range c.Params {
 		route = strings.Replace(route, p.Value, ":"+p.Key, 1)
 	}
+
 	claims := jwt.ExtractClaims(c)
 	uids := claims["uid"].(string)
 	val, _ := primitive.ObjectIDFromHex(uids)
@@ -77,6 +81,8 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 	admin := claims["admin"].(bool)
 	if userLevelForRouteShouldBe == "admin" && admin {
 		return true
+	} else if userLevelForRouteShouldBe == "admin" && !admin {
+		return false
 	}
 
 	return allowed(userLevelForRouteShouldBe, claims, c)

@@ -4,6 +4,7 @@ import (
 	am "backend/models/cmsmodels/assignmentmodels"
 	cm "backend/models/cmsmodels/coursemodels"
 	sm "backend/models/cmsmodels/submissionmodels"
+	gfs "backend/models/gridfsmodels"
 	um "backend/models/usermodels"
 )
 
@@ -20,6 +21,10 @@ func NewMongoAssignmentInterface() *am.AssignmentInterface {
 
 func NewMongoCourseInterface() *cm.CourseInterface {
 	return cm.New()
+}
+
+func NewGridFSInterface() *gfs.GridFSInterface {
+	return gfs.New()
 }
 
 func NewMongoUserInterface() *um.UserInterface {

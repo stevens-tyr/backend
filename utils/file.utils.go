@@ -1,38 +1,38 @@
 package utils
 
 import (
-	"errors"
 	"io/ioutil"
 	"mime/multipart"
 
 	"github.com/h2non/filetype"
+
+	"backend/errors"
 )
 
-var ErrorFileDNE = errors.New("Error: File Does Not Exist.")
-
-func CheckFileType(mf *multipart.FileHeader) (bf []byte, err error) {
+func CheckFileType(mf *multipart.FileHeader) ([]byte, errors.APIError) {
 	// Empty File
+	var bf []byte
 	if mf == nil {
-		return bf, ErrorFileDNE
+		return bf, errors.ErrorFileDNE
 	}
 
 	// Open File
 	of, err := mf.Open()
 	defer of.Close()
 	if err != nil {
-		return bf, err
+		return bf, errors.ErrorFailedToOpenFile
 	}
 
 	// Read File
 	bf, err = ioutil.ReadAll(of)
 	if err != nil {
-		return bf, err
+		return bf, errors.ErrorFailedToReadFile
 	}
 
 	// Check File Type
 	k, u := filetype.Match(bf)
 	if u != nil || (k.Extension != "zip" && k.Extension != "gz") {
-		return bf, errors.New("Error: Unexpected File Type.")
+		return bf, errors.ErrorUnsupportedFileType
 	}
 
 	return bf, nil
