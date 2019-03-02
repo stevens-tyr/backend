@@ -26,7 +26,7 @@ type (
 
 	// User a default User struct to represent a User in Tyr.
 	MongoUser struct {
-		ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" biding:"required"`
+		ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" binding:"required"`
 		Admin           bool               `bson:"admin" json:"admin`
 		Email           string             `bson:"email" json:"email" binding:"required"`
 		Password        []byte             `bson:"password" json:"password" binding:"required"`

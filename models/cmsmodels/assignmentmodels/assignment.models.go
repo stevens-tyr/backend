@@ -35,7 +35,7 @@ type (
 	// Assignment struct to store information about an assignment.
 	MongoAssignment struct {
 		ID              primitive.ObjectID     `bson:"_id" form:"id" json:"-"`
-		Language        string                 `bson:"language" form:"lanaguage" binding:"required" json:"language"`
+		Language        string                 `bson:"language" form:"language" binding:"required" json:"language"`
 		Version         string                 `bson:"version" form:"version" binding:"required" json:"version"`
 		Name            string                 `bson:"name" form:"name" binding:"required" json:"name"`
 		NumAttempts     int                    `bson:"numAttempts" form:"numAttempts" binding:"required" json:"numAttempts"`
