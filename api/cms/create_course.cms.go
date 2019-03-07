@@ -1,7 +1,7 @@
 package cms
 
 import (
-	"github.com/appleboy/gin-jwt"
+	ginjwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 
 	"backend/api/auth"
@@ -10,7 +10,7 @@ import (
 )
 
 func CreateCourse(c *gin.Context) {
-	claims := jwt.ExtractClaims(c)
+	claims := ginjwt.ExtractClaims(c)
 	uid := claims["uid"]
 
 	var createCourse forms.CreateCourseForm
