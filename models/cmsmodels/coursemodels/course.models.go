@@ -69,70 +69,52 @@ func (c *CourseInterface) FindOne(department, section, semester string, number i
 func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": cid}},
-		bson.M{"$unwind": "$assignments"},
 		bson.M{
 			"$lookup": bson.M{
 				"from":         "assignments",
 				"localField":   "assignments",
 				"foreignField": "_id",
-				"as":           "assignmentObjs",
+				"as":           "assignments",
 			},
 		},
-		bson.M{"$unwind": "$assignmentObjs"},
-		bson.M{"$unwind": "$assignmentObjs.submissions"},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "submissions",
-				"localField":   "assignmentObjs.submissions.submissionID",
-				"foreignField": "_id",
-				"as":           "submissionObjs",
-			},
-		},
-		bson.M{"$unwind": "$submissionObjs"},
-		bson.M{"$unwind": "$students"},
+		// bson.M{
+		// 	"$map": bson.M {
+		// 		"input": "assignments",
+		// 		"as": "assignment",
+		// 		"in": bson.M{
+		// 			"$lookup": bson.M{
+		// 				"from":         "submissions",
+		// 				"localField":   "assignment.submissions.submissionID",
+		// 				"foreignField": "_id",
+		// 				"as":           "assignment.submissions",
+		// 			},
+		// 		},
+		// 	},
+		// },
 		bson.M{
 			"$lookup": bson.M{
 				"from":         "users",
 				"localField":   "students",
 				"foreignField": "_id",
-				"as":           "studentObjs",
+				"as":           "students",
 			},
 		},
-		bson.M{"$unwind": "$studentObjs"},
-		bson.M{"$unwind": "$professors"},
 		bson.M{
 			"$lookup": bson.M{
 				"from":         "users",
 				"localField":   "professors",
 				"foreignField": "_id",
-				"as":           "professorObjs",
+				"as":           "professors",
 			},
 		},
-		bson.M{"$unwind": "$professorObjs"},
-		bson.M{"$unwind": "$assistants"},
 		bson.M{
 			"$lookup": bson.M{
 				"from":         "users",
 				"localField":   "assistants",
 				"foreignField": "_id",
-				"as":           "assistantObjs",
+				"as":           "assistants",
 			},
 		},
-		bson.M{"$unwind": "$assistantObjs"},
-		bson.M{
-			"$group": bson.M{
-        "_id": "$_id",
-        "department": bson.M{"$first": "$department"},
-        "longName": bson.M{"$first": "$longName"},
-        "number": bson.M{"$first": "$number"},
-        "section": bson.M{"$first": "$section"},
-        "professors": bson.M{"$push": "$professorObjs"},
-        "assistants": bson.M{"$push": "$assistantObjs"},
-        "students": bson.M{"$first": "$studentObjs"},
-        "assignments": bson.M{ "$push": "$assignmentObjs"},
-        "submissions": bson.M{ "$push": "$submissionObjs"},
-    	},
-    },
     bson.M{
     	"$project": bson.M{
     		"assignments.tests": 0,
