@@ -31,8 +31,9 @@ type (
 	MongoSubmission struct {
 		ID            primitive.ObjectID `bson:"_id" json:"id" binding:"required"`
 		UserID        primitive.ObjectID `bson:"userID" json:"userID" binding:"required"`
+		AssignmentID        primitive.ObjectID `bson:"assignmentID" json:"assignmentID" binding:"required"`
 		AttemptNumber int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
-		// SubmissionDate primitive.DateTime `bson:"submissionDate" json:"submissionDate" binding:"required"`
+		SubmissionDate primitive.DateTime `bson:"submissionDate" json:"submissionDate" binding:"required"`
 		File         string `bson:"file" json:"file" binding:"required"`
 		ErrorTesting bool   `bson:"errorTesting" json:"errorTesting" binding:"required"`
 		Cases        Cases  `bson:"cases" json:"cases" binding:"required"`
@@ -62,6 +63,29 @@ func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmi
 			"userID": uid,
 		},
 		options.Find(),
+	)
+
+	for cur.Next(s.ctx) {
+		var submission MongoSubmission
+		err = cur.Decode(&submission)
+		if err != nil {
+			return submissions, errors.ErrorInvlaidBSON
+		}
+
+		submissions = append(submissions, submission)
+	}
+
+	return submissions, nil
+}
+
+func (s *SubmissionInterface) GetUsersSubmissionsLimited(uid interface{}, limit int64) ([]MongoSubmission, errors.APIError) {
+	var submissions []MongoSubmission
+	cur, err := s.col.Find(
+		s.ctx,
+		bson.M{
+			"userID": uid,
+		},
+		options.Find().SetLimit(limit).SetSort(bson.M{"$natural": -1}),
 	)
 
 	for cur.Next(s.ctx) {

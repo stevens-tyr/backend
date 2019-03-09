@@ -19,6 +19,7 @@ import (
 type MongoCourse struct {
 	ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id" binding:"required"`
 	Department  string               `bson:"department" json:"department" binding:"required"`
+	LongName  string               `bson:"longName" json:"longName" binding:"required"`
 	Number      int                  `bson:"number" json:"number" binding:"required"`
 	Section     string               `bson:"section" json:"section" binding:"required"`
 	Semester    string               `bson:"semester" json:"semester" binding:"required"`
@@ -60,6 +61,109 @@ func (c *CourseInterface) FindOne(department, section, semester string, number i
 
 	if course == nil {
 		return nil, errors.ErrorResourceNotFound
+	}
+
+	return course, nil
+}
+
+func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, errors.APIError) {
+	query := []interface{}{
+		bson.M{"$match": bson.M{"_id": cid}},
+		bson.M{"$unwind": "$assignments"},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "assignments",
+				"localField":   "assignments",
+				"foreignField": "_id",
+				"as":           "assignmentObjs",
+			},
+		},
+		bson.M{"$unwind": "$assignmentObjs"},
+		bson.M{"$unwind": "$assignmentObjs.submissions"},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "submissions",
+				"localField":   "assignmentObjs.submissions.submissionID",
+				"foreignField": "_id",
+				"as":           "submissionObjs",
+			},
+		},
+		bson.M{"$unwind": "$submissionObjs"},
+		bson.M{"$unwind": "$students"},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "students",
+				"foreignField": "_id",
+				"as":           "studentObjs",
+			},
+		},
+		bson.M{"$unwind": "$studentObjs"},
+		bson.M{"$unwind": "$professors"},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "professors",
+				"foreignField": "_id",
+				"as":           "professorObjs",
+			},
+		},
+		bson.M{"$unwind": "$professorObjs"},
+		bson.M{"$unwind": "$assistants"},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "assistants",
+				"foreignField": "_id",
+				"as":           "assistantObjs",
+			},
+		},
+		bson.M{"$unwind": "$assistantObjs"},
+		bson.M{
+			"$group": bson.M{
+        "_id": "$_id",
+        "department": bson.M{"$first": "$department"},
+        "longName": bson.M{"$first": "$longName"},
+        "number": bson.M{"$first": "$number"},
+        "section": bson.M{"$first": "$section"},
+        "professors": bson.M{"$push": "$professorObjs"},
+        "assistants": bson.M{"$push": "$assistantObjs"},
+        "students": bson.M{"$first": "$studentObjs"},
+        "assignments": bson.M{ "$push": "$assignmentObjs"},
+        "submissions": bson.M{ "$push": "$submissionObjs"},
+    	},
+    },
+    bson.M{
+    	"$project": bson.M{
+    		"assignments.tests": 0,
+    		"students.admin": 0,
+    		"students.enrolledCourses": 0,
+    		"students.password": 0,
+    		"professors.admin": 0,
+    		"professors.enrolledCourses": 0,
+    		"professors.password": 0,
+    		"assistants.admin": 0,
+    		"assistants.enrolledCourses": 0,
+    		"assistants.password": 0,
+    	},
+    },
+	}
+
+	var course map[string]interface{}
+	cur, err := c.col.Aggregate(
+		c.ctx,
+		query,
+		options.Aggregate(),
+	)
+	if err != nil {
+		return nil, nil
+	}
+
+	for cur.Next(c.ctx) {
+		err = cur.Decode(&course)
+		if course == nil {
+			return nil, errors.ErrorResourceNotFound
+		}
 	}
 
 	return course, nil

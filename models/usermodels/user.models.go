@@ -125,7 +125,7 @@ func (u *UserInterface) Register(form forms.UserRegisterForm) errors.APIError {
 	return nil
 }
 
-func (u *UserInterface) GetCourses(uid interface{}) ([]forms.CourseAggQuery, errors.APIError) {
+func (u *UserInterface) GetCourses(uid interface{}, courseLevels map[string]interface{}) ([]forms.CourseAggQuery, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": uid}},
 		bson.M{"$unwind": "$enrolledCourses"},
@@ -153,12 +153,16 @@ func (u *UserInterface) GetCourses(uid interface{}) ([]forms.CourseAggQuery, err
 	}
 
 	for cur.Next(u.ctx) {
-		var course map[string]forms.CourseAggQuery
-		err = cur.Decode(&course)
+		var coursem map[string]forms.CourseAggQuery
+		err = cur.Decode(&coursem)
 		if err != nil {
 			return courses, errors.ErrorDatabaseFailedExtract
 		}
-		courses = append(courses, course["course"])
+
+		course := coursem["course"]
+		fmt.Println("courseID", course.ID.Hex())
+		course.Role = courseLevels[course.ID.Hex()].(string)
+		courses = append(courses, course)
 	}
 	return courses, nil
 }

@@ -8,13 +8,13 @@ import (
 func CourseAssignments(c *gin.Context) {
 	cid, _ := c.Get("cid")
 
-	courses, err := cm.GetAssignments(cid)
+	assignments, err := cm.GetAssignments(cid)
 	if err != nil {
 		c.Set("error", err)
 		return
 	}
 	c.JSON(200, gin.H{
-		"message": "User's courses.",
-		"courses": courses,
+		"message": "Course assignments.",
+		"assignments": assignments,
 	})
 }

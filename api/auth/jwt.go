@@ -39,15 +39,20 @@ var routeLevels = map[string]map[string]string{
 		"create/course": "CreateCourse",
 	},
 	"any": {
-		"course/:cid/:section/assignments":                                   "CourseAssignments",
-		"course/:cid/:section/assignment/:aid/submission/download/:sid/:num": "DownloadSubmission",
-		"course/:cid/:section/assignment/:aid/details":                       "GetAssignment",
+		"course/:cid": "GetCourse",
+		"course/:cid/assignments":                                   "CourseAssignments",
+		"course/:cid/assignment/:aid/submission/download/:sid/:num": "DownloadSubmission",
+		"course/:cid/assignment/:aid/details":                       "GetAssignment",
+	},
+	"assitant": map[string]string{
+		"course/:cid/add/user":          "CourseAddUser",
+		"course/:cid/assignment/create": "CreateAssignment",
 	},
 	"teacher": {
-		"course/:cid/:section/add/user":             "CourseAddUser",
-		"course/:cid/:section/add/users":            "CourseAddUsers",
-		"course/:cid/:section/assignment/create":    "CreateAssignment",
-		"course/:cid/:section/assignment/:aid/file": "AssignmentAsFile",
+		"course/:cid/add/user":             "CourseAddUser",
+		"course/:cid/add/users":            "CourseAddUsers",
+		"course/:cid/assignment/create":    "CreateAssignment",
+		"course/:cid/assignment/:aid/file": "AssignmentAsFile",
 	},
 	"student": {
 		"course/:cid/:section/assignment/submit/:aid": "SubmitAssignment",

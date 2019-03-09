@@ -9,7 +9,7 @@ import (
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )
 
-func allowed(level string, claims map[string]interface{}, c *gin.Context) bool {
+func allowed(levels []string, claims map[string]interface{}, c *gin.Context) bool {
 	enrolledCourses := claims["courses"].(map[string]interface{})
 	uid := claims["uid"]
 	cid, _ := c.Get("cids")
@@ -17,13 +17,14 @@ func allowed(level string, claims map[string]interface{}, c *gin.Context) bool {
 	allowed := false
 
 	val, found := enrolledCourses[cid.(string)]
-	fmt.Println("cid:", cid, level, val)
-	if found && (level == "any" || val == level) {
+	c.Set("role", val)
+	fmt.Println("cid:", cid, levels, val)
+	if found && (in(levels, "any") || in(levels, val.(string))) {
 		fmt.Println("yooooo")
 		return true
 	}
 
-	if level == "student" && exists {
+	if in(levels, "student") && exists {
 		sub, err := sm.GetUsersSubmission(sid, uid)
 		if err != nil {
 			fmt.Println("err", err)
@@ -36,28 +37,43 @@ func allowed(level string, claims map[string]interface{}, c *gin.Context) bool {
 	return allowed
 }
 
-func determineLevel(route string) string {
+func in(terms []string, term string) bool {
+	for _, val := range terms {
+		if val == term {
+			return true
+		}
+	}
+
+	return false
+}
+
+func determineLevel(route string) []string {
+	var allowed []string
 	if _, found := routeLevels["admin"][route]; found {
-		return "admin"
+		allowed = append(allowed, "admin")
 	}
 
 	if _, found := routeLevels["any"][route]; found {
-		return "any"
+		allowed = append(allowed, "any")
 	}
 
 	if _, found := routeLevels["assitant"][route]; found {
-		return "assitant"
+		allowed = append(allowed, "assitant")
 	}
 
 	if _, found := routeLevels["teacher"][route]; found {
-		return "teacher"
+		allowed = append(allowed, "teacher")
 	}
 
 	if _, found := routeLevels["student"][route]; found {
-		return "student"
+		allowed = append(allowed, "student")
 	}
 
-	return "whitelisted"
+	if len(allowed) == 0 {
+		allowed = append(allowed, "whitelisted")
+	}
+
+	return allowed
 }
 
 // Authorizator a default function for a gin jwt, that authorizes a user.
@@ -74,14 +90,14 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 
 	userLevelForRouteShouldBe := determineLevel(route)
 	fmt.Println("user level:", userLevelForRouteShouldBe, route)
-	if userLevelForRouteShouldBe == "whitelisted" {
+	if in(userLevelForRouteShouldBe, "whitelisted") {
 		return true
 	}
 
 	admin := claims["admin"].(bool)
-	if userLevelForRouteShouldBe == "admin" && admin {
+	if in(userLevelForRouteShouldBe,"admin") && admin {
 		return true
-	} else if userLevelForRouteShouldBe == "admin" && !admin {
+	} else if in(userLevelForRouteShouldBe, "admin") && !admin {
 		return false
 	}
 

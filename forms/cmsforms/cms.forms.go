@@ -10,7 +10,7 @@ type (
 		ID        primitive.ObjectID `bson:"_id,omitempty" json:"id" binding:"required"`
 		DueDate   primitive.DateTime `bson:"dueDate" json:"dueDate" binding:"required"`
 		Name      string             `bson:"name" json:"name" binding:"required"`
-		Published bool               `bson:"published" json:"published" binding:"required"`
+		Published bool               `bson:"published" json:"-" binding:"required"`
 	}
 
 	CourseAddUser struct {
@@ -49,5 +49,7 @@ type (
 		Department string             `bson:"department" json:"department" binding:"required"`
 		Number     int                `bson:"number" json:"number" binding:"required"`
 		Section    string             `bson:"section" json:"section" binding:"required"`
+		LongName string `bson:"longName" json:"LongName" binding:"required"`
+		Role string `json:"role" binding:"required"`
 	}
 )
