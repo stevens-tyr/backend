@@ -69,24 +69,16 @@ func (c *CourseInterface) FindOne(department, section, semester string, number i
 func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": cid}},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "assignments",
-				"localField":   "assignments",
-				"foreignField": "_id",
-				"as":           "assignments",
-			},
-		},
 		// bson.M{
 		// 	"$map": bson.M {
-		// 		"input": "assignments",
+		// 		"input": "$assignments",
 		// 		"as": "assignment",
 		// 		"in": bson.M{
 		// 			"$lookup": bson.M{
 		// 				"from":         "submissions",
 		// 				"localField":   "assignment.submissions.submissionID",
 		// 				"foreignField": "_id",
-		// 				"as":           "assignment.submissions",
+		// 				"as":           "submissions",
 		// 			},
 		// 		},
 		// 	},
@@ -115,9 +107,42 @@ func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, err
 				"as":           "assistants",
 			},
 		},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "assignments",
+				"localField":   "assignments",
+				"foreignField": "_id",
+				"as":           "assignments",
+			},
+		},
     bson.M{
     	"$project": bson.M{
-    		"assignments.tests": 0,
+    		"department": 1,
+    		"longName": 1,
+    		"number": 1,
+    		"section": 1,
+    		"semester": 1,
+    		"assignments": bson.M{
+    			"$filter": bson.M{
+    				"input": "$assignments",
+    				"as": "assignment",
+    				"cond": "$$assignment.published",
+    			},
+    		},
+    		"students": 1,
+    		"professors": 1,
+    		"assistants": 1,
+    	},
+    },
+    bson.M{
+    	"$project": bson.M{
+    		// "assignments.tests": bson.M{
+    		// 	"$filter": bson.M{
+    		// 		"input": "$assignments.tests",
+    		// 		"as": "test",
+    		// 		"cond": "$$test.studentFacing",
+    		// 	},
+    		// },
     		"students.admin": 0,
     		"students.enrolledCourses": 0,
     		"students.password": 0,
@@ -127,8 +152,8 @@ func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, err
     		"assistants.admin": 0,
     		"assistants.enrolledCourses": 0,
     		"assistants.password": 0,
-    	},
-    },
+  		},
+		},
 	}
 
 	var course map[string]interface{}
