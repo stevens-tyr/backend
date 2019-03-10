@@ -139,6 +139,7 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
     				"cond": "$$test.studentFacing",
     			},
     		},
+    		"submissions": 1,
 			},
 		}
 
