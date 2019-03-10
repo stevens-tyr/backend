@@ -34,18 +34,18 @@ type (
 
 	// Assignment struct to store information about an assignment.
 	MongoAssignment struct {
-		ID              primitive.ObjectID     `bson:"_id" form:"id" json:"-"`
+		ID              primitive.ObjectID     `bson:"_id" form:"id" json:"id"`
 		Language        string                 `bson:"language" form:"lanaguage" binding:"required" json:"language"`
 		Version         string                 `bson:"version" form:"version" binding:"required" json:"version"`
 		Name            string                 `bson:"name" form:"name" binding:"required" json:"name"`
 		NumAttempts     int                    `bson:"numAttempts" form:"numAttempts" binding:"required" json:"numAttempts"`
 		Description     string                 `bson:"description" form:"description" binding:"required" json:"description"`
-		DueDate         primitive.DateTime     `bson:"dueDate" form:"dueDate" binding:"required" json:"-"`
+		DueDate         primitive.DateTime     `bson:"dueDate" form:"dueDate" binding:"required" json:"dueDate"`
 		Published       bool                   `bson:"published" form:"published" binding:"required" json:"-"`
-		SupportingFiles string                 `bson:"supportingFiles" form:"supportingFiles" json:"-"`
+		SupportingFiles string                 `bson:"supportingFiles" form:"supportingFiles" json:"supportingFiles"`
 		TestBuildCMD    string                 `bson:"testBuildCMD" form:"testBuildCMD" json:"testBuildCMD"`
 		Tests           []Test                 `bson:"tests" form:"tests" binding:"required" json:"tests"`
-		Submissions     []AssignmentSubmission `bson:"submissions" form:"submissions" json:"-"`
+		Submissions     []AssignmentSubmission `bson:"submissions" form:"submissions" json:"submissions"`
 	}
 
 	AssignmentInterface struct {
@@ -102,6 +102,74 @@ func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.API
 	err := res.Decode(&assign)
 	if err != nil {
 		return nil, errors.ErrorInvlaidBSON
+	}
+
+	return assign, nil
+}
+
+func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[string]interface{}, errors.APIError) {
+	query := []interface{}{
+		bson.M{"$match": bson.M{"_id": aid}},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "submissions",
+				"localField":   "submissions.submissionID",
+				"foreignField": "_id",
+				"as":           "submissions",
+			},
+		},	
+	}
+
+	project := bson.M{
+			"$project": bson.M{
+				"_id": 1,
+				"language": 1,
+				"version": 1,
+				"name": 1,
+				"numAttempts": 1,
+				"description": 1,
+				"supportingFiles": 1,
+				"dueDate": 1,
+				"published": 1,
+				"testBuildCMD": 1,
+				"tests": bson.M{
+					"$filter": bson.M{
+    				"input": "$tests",
+    				"as": "test",
+    				"cond": "$$test.studentFacing",
+    			},
+    		},
+			},
+		}
+
+	if role == "student" {
+		project["$project"].(primitive.M)["submissions"] = bson.M{
+					"$filter": bson.M{
+    				"input": "$submissions",
+    				"as": "submission",
+    				"cond": bson.M{"$eq": bson.A{"$$submission.userID", uid}},
+    			},
+    		}
+		query = append(query, project, bson.M{
+			"$project": bson.M{
+				"submissions.cases.adminFacing": 0,
+			},
+		})
+	} else {
+		query = append(query, project)
+	}
+
+	var assign map[string]interface{}
+	cur, err := a.col.Aggregate(a.ctx, query, options.Aggregate())
+	if err != nil {
+		return nil, errors.ErrorInvlaidBSON
+	}
+
+	for cur.Next(a.ctx) {
+		err = cur.Decode(&assign)
+		if err != nil {
+			return nil, errors.ErrorResourceNotFound
+		}
 	}
 
 	return assign, nil

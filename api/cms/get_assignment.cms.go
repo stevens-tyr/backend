@@ -5,9 +5,12 @@ import (
 )
 
 func GetAssignment(c *gin.Context) {
+	// lets verify assignment is in course in future?
 	aid, _ := c.Get("aid")
-
-	assignment, err := am.Get(aid)
+	uid, _ := c.Get("uid")
+	role, _ := c.Get("role")
+ 
+	assignment, err := am.GetFull(aid, uid, role.(string))
 	if err != nil {
 		c.Set("error", err)
 		return

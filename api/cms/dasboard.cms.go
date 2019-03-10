@@ -20,7 +20,7 @@ func Dashboard(c *gin.Context) {
 
 	var assignments []forms.AssignmentAggQuery
 	for _, course := range courses {
-		courseAssignments, err := cm.GetAssignments(course.ID)
+		courseAssignments, err := cm.GetAssignments(course.ID, course.Role)
 		if err != nil {
 			c.Set("error", err)
 			return

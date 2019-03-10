@@ -7,8 +7,9 @@ import (
 // CourseAssignments is the function for a route to display all assignments a course has.
 func CourseAssignments(c *gin.Context) {
 	cid, _ := c.Get("cid")
+	role, _ := c.Get("role")
 
-	assignments, err := cm.GetAssignments(cid)
+	assignments, err := cm.GetAssignments(cid, role.(string))
 	if err != nil {
 		c.Set("error", err)
 		return

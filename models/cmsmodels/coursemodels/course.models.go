@@ -69,20 +69,6 @@ func (c *CourseInterface) FindOne(department, section, semester string, number i
 func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": cid}},
-		// bson.M{
-		// 	"$map": bson.M {
-		// 		"input": "$assignments",
-		// 		"as": "assignment",
-		// 		"in": bson.M{
-		// 			"$lookup": bson.M{
-		// 				"from":         "submissions",
-		// 				"localField":   "assignment.submissions.submissionID",
-		// 				"foreignField": "_id",
-		// 				"as":           "submissions",
-		// 			},
-		// 		},
-		// 	},
-		// },
 		bson.M{
 			"$lookup": bson.M{
 				"from":         "users",
@@ -115,13 +101,43 @@ func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, err
 				"as":           "assignments",
 			},
 		},
+		// bson.M{"$unwind": "$assignments"},
+		// bson.M{"$unwind": "$assignments.submissions"},
+		// bson.M{"$unwind": "$assignments.tests"},
+		// bson.M{
+		// 	"$group": bson.M{
+		// 		"_id": "$_id",
+		// 		"department": bson.M{"$first": "$department"},
+  //   		"longName": bson.M{"$first": "$longName"},
+  //   		"number": bson.M{"$first": "$number"},
+  //   		"section": bson.M{"$first": "$section"},
+  //   		"semester": bson.M{"$first": "$semester"},
+  //   		"assistants": bson.M{"$first": "$assistants"},
+  //   		"professors": bson.M{"$first": "$professors"},
+  //   		"students": bson.M{"$first": "$students"},
+		// 		"assignments": bson.M{"$push": "$assignments"},
+		// 		// "subs": bson.M{"$push": "$assignments.submissions"},
+		// 	},
+		// },
+		// bson.M{
+		// 	"$lookup": bson.M{
+		// 		"from":         "submissions",
+		// 		"localField":   "subs.submissionID",
+		// 		"foreignField": "_id",
+		// 		"as":           "subs",
+		// 	},
+		// },
     bson.M{
     	"$project": bson.M{
+    		// "subs": 1,
     		"department": 1,
     		"longName": 1,
     		"number": 1,
     		"section": 1,
     		"semester": 1,
+    		"assistants": 1,
+    		"professors": 1,
+    		"students": 1,
     		"assignments": bson.M{
     			"$filter": bson.M{
     				"input": "$assignments",
@@ -129,20 +145,12 @@ func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, err
     				"cond": "$$assignment.published",
     			},
     		},
-    		"students": 1,
-    		"professors": 1,
-    		"assistants": 1,
-    	},
+  		},
     },
     bson.M{
     	"$project": bson.M{
-    		// "assignments.tests": bson.M{
-    		// 	"$filter": bson.M{
-    		// 		"input": "$assignments.tests",
-    		// 		"as": "test",
-    		// 		"cond": "$$test.studentFacing",
-    		// 	},
-    		// },
+    		"assignments.submissions": 0,
+    		"assignments.tests": 0,
     		"students.admin": 0,
     		"students.enrolledCourses": 0,
     		"students.password": 0,
@@ -163,7 +171,7 @@ func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, err
 		options.Aggregate(),
 	)
 	if err != nil {
-		return nil, nil
+		return nil, errors.ErrorInvlaidBSON
 	}
 
 	for cur.Next(c.ctx) {
@@ -298,7 +306,7 @@ func (c *CourseInterface) AddAssignment(aid, cid interface{}) errors.APIError {
 	return nil
 }
 
-func (c *CourseInterface) GetAssignments(cid interface{}) ([]forms.AssignmentAggQuery, errors.APIError) {
+func (c *CourseInterface) GetAssignments(cid interface{}, role string) ([]forms.AssignmentAggQuery, errors.APIError) {
 	var assignments []forms.AssignmentAggQuery
 
 	query := []interface{}{
@@ -332,7 +340,7 @@ func (c *CourseInterface) GetAssignments(cid interface{}) ([]forms.AssignmentAgg
 		if err != nil {
 			return assignments, errors.ErrorInvlaidBSON
 		}
-		if assignment["assignment"].Published {
+		if role != "student" || assignment["assignment"].Published {
 			assignments = append(assignments, assignment["assignment"])
 		}
 	}
