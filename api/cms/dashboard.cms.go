@@ -36,10 +36,10 @@ func Dashboard(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"status_code": 200,
-		"msg":         "User's Info.",
-		"courses":     courses,
-		"assignments": assignments,
+		"status_code":           200,
+		"msg":                   "User's Info.",
+		"courses":               courses,
+		"assignments":           assignments,
 		"mostRecentSubmissions": submissions,
 	})
 }

@@ -6,11 +6,11 @@ import (
 
 func GetCourse(c *gin.Context) {
 	cid, _ := c.Get("cid")
-	// role, _ := c.Get("role")
+	role, _ := c.Get("role")
 	uid, _ := c.Get("uid")
 
-	course, err := cm.Get(cid, uid)
-	// course["role"] = role
+	course, err := cm.Get(cid, uid, role.(string))
+	course["role"] = role
 	if err != nil {
 		c.Set("error", err)
 		return
@@ -19,6 +19,6 @@ func GetCourse(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"status_code": 200,
 		"msg":         "Course Info.",
-		"course":  course,
+		"course":      course,
 	})
 }
