@@ -20,7 +20,6 @@ func allowed(levels []string, claims map[string]interface{}, c *gin.Context) boo
 	c.Set("role", val)
 	fmt.Println("cid:", cid, levels, val)
 	if found && (in(levels, "any") || in(levels, val.(string))) {
-		fmt.Println("yooooo")
 		return true
 	}
 
@@ -57,8 +56,8 @@ func determineLevel(route string) []string {
 		allowed = append(allowed, "any")
 	}
 
-	if _, found := routeLevels["assitant"][route]; found {
-		allowed = append(allowed, "assitant")
+	if _, found := routeLevels["assistant"][route]; found {
+		allowed = append(allowed, "assistant")
 	}
 
 	if _, found := routeLevels["teacher"][route]; found {
@@ -95,7 +94,7 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 	}
 
 	admin := claims["admin"].(bool)
-	if in(userLevelForRouteShouldBe,"admin") && admin {
+	if in(userLevelForRouteShouldBe, "admin") && admin {
 		return true
 	} else if in(userLevelForRouteShouldBe, "admin") && !admin {
 		return false

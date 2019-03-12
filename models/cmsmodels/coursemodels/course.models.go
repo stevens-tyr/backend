@@ -24,7 +24,7 @@ type MongoCourse struct {
 	Section     string               `bson:"section" json:"section" binding:"required"`
 	Semester    string               `bson:"semester" json:"semester" binding:"required"`
 	Professors  []primitive.ObjectID `bson:"professors" json:"professors" binding:"required"`
-	Assistants  []primitive.ObjectID `bson:"assistants" json:"assitants" binding:"required"`
+	Assistants  []primitive.ObjectID `bson:"assistants" json:"assistants" binding:"required"`
 	Students    []primitive.ObjectID `bson:"students" json:"students" binding:"required"`
 	Assignments []primitive.ObjectID `bson:"assignments" json:"assignments" binding:"required"`
 }
@@ -66,103 +66,85 @@ func (c *CourseInterface) FindOne(department, section, semester string, number i
 	return course, nil
 }
 
-func (c *CourseInterface) Get(cid, uid interface{}) (map[string]interface{}, errors.APIError) {
+func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]interface{}, errors.APIError) {
+	userLookup := func(userType string) bson.M {
+		return bson.M{
+			"$lookup": bson.M{
+				"from": "users",
+				"let": bson.M{ "userType": "$" + userType },
+				"pipeline": bson.A{
+					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$_id", "$$userType"}, } } },
+					bson.M{ "$project": bson.M{ "admin": 0, "enrolledCourses": 0, "password": 0 } },
+				},
+				"as": userType,
+			},
+		}
+	}
+
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": cid}},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "users",
-				"localField":   "students",
-				"foreignField": "_id",
-				"as":           "students",
-			},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "users",
-				"localField":   "professors",
-				"foreignField": "_id",
-				"as":           "professors",
-			},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "users",
-				"localField":   "assistants",
-				"foreignField": "_id",
-				"as":           "assistants",
-			},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "assignments",
-				"localField":   "assignments",
-				"foreignField": "_id",
-				"as":           "assignments",
-			},
-		},
-		// bson.M{"$unwind": "$assignments"},
-		// bson.M{"$unwind": "$assignments.submissions"},
-		// bson.M{"$unwind": "$assignments.tests"},
-		// bson.M{
-		// 	"$group": bson.M{
-		// 		"_id": "$_id",
-		// 		"department": bson.M{"$first": "$department"},
-  //   		"longName": bson.M{"$first": "$longName"},
-  //   		"number": bson.M{"$first": "$number"},
-  //   		"section": bson.M{"$first": "$section"},
-  //   		"semester": bson.M{"$first": "$semester"},
-  //   		"assistants": bson.M{"$first": "$assistants"},
-  //   		"professors": bson.M{"$first": "$professors"},
-  //   		"students": bson.M{"$first": "$students"},
-		// 		"assignments": bson.M{"$push": "$assignments"},
-		// 		// "subs": bson.M{"$push": "$assignments.submissions"},
-		// 	},
-		// },
-		// bson.M{
-		// 	"$lookup": bson.M{
-		// 		"from":         "submissions",
-		// 		"localField":   "subs.submissionID",
-		// 		"foreignField": "_id",
-		// 		"as":           "subs",
-		// 	},
-		// },
-    bson.M{
-    	"$project": bson.M{
-    		// "subs": 1,
-    		"department": 1,
-    		"longName": 1,
-    		"number": 1,
-    		"section": 1,
-    		"semester": 1,
-    		"assistants": 1,
-    		"professors": 1,
-    		"students": 1,
-    		"assignments": bson.M{
-    			"$filter": bson.M{
-    				"input": "$assignments",
-    				"as": "assignment",
-    				"cond": "$$assignment.published",
-    			},
-    		},
-  		},
-    },
-    bson.M{
-    	"$project": bson.M{
-    		"assignments.submissions": 0,
-    		"assignments.tests": 0,
-    		"students.admin": 0,
-    		"students.enrolledCourses": 0,
-    		"students.password": 0,
-    		"professors.admin": 0,
-    		"professors.enrolledCourses": 0,
-    		"professors.password": 0,
-    		"assistants.admin": 0,
-    		"assistants.enrolledCourses": 0,
-    		"assistants.password": 0,
-  		},
-		},
+		userLookup("students"),
+		userLookup("professors"),
+		userLookup("assistants"),
 	}
+
+	if role == "student" {
+		query = append(query, bson.M{
+			"$lookup": bson.M{
+				"from": "assignments",
+				"let": bson.M{ "ass": "$assignments" },
+				"pipeline": bson.A{
+					bson.M{
+						"$match": bson.M{
+							"$expr": bson.M{ "$and": bson.A{bson.M{ "$in": bson.A{"$_id", "$$ass"} }, "$published"} },
+						},
+					},
+					bson.M{
+						"$lookup": bson.M{
+							"from": "submissions",
+							"let": bson.M{ "assID": "$_id" },
+							"pipeline": bson.A{
+								bson.M{
+									"$match": bson.M{
+										"$expr": bson.M{
+											"$and": bson.A{
+												bson.M{ "$eq": bson.A{"$userID", uid} },
+												bson.M{ "$eq": bson.A{"$$assID", "$assignmentID"} },
+											},
+										},
+									},
+								},
+								bson.M{ "$sort": bson.M{ "submissionDate": -1 } },
+								bson.M{ "$project": bson.M{ "cases.adminFacing": 0 } },
+							},
+							"as": "submissions",
+						},
+					},
+				},
+				"as": "assignments",
+			},
+		})
+	} else {
+		query = append(query, bson.M{
+			"$lookup": bson.M{
+				"from": "assignments",
+				"let": bson.M{ "ass": "$assignments" },
+				"pipeline": bson.A{
+					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$_id", "$$ass"} } } },
+					bson.M{
+						"$lookup": bson.M{
+							"from": "submissions",
+							"localField": "submissions.submissionID",
+							"foreignField": "_id",
+							"as": "submissions",
+						},
+					},
+				},
+				"as": "assignments",
+			},
+		})
+	}
+
 
 	var course map[string]interface{}
 	cur, err := c.col.Aggregate(
@@ -231,7 +213,7 @@ func (c *CourseInterface) UserExists(cid, uid interface{}) (bool, errors.APIErro
 		{"_id", cid},
 		{
 			"$or", bson.A{
-				bson.M{"assitants": bson.M{"$elemMatch": uid}},
+				bson.M{"assistants": bson.M{"$elemMatch": uid}},
 				bson.M{"professors": bson.M{"$elemMatch": uid}},
 				bson.M{"students": bson.M{"$elemMatch": uid}},
 			},
@@ -271,8 +253,8 @@ func (c *CourseInterface) AddUser(level string, uid, cid interface{}) errors.API
 	case "student":
 		tag = "students"
 		break
-	case "assitant":
-		tag = "assitants"
+	case "assistant":
+		tag = "assistants"
 		break
 	case "professor":
 		tag = "professors"
