@@ -49,7 +49,7 @@ type (
 		Department string             `bson:"department" json:"department" binding:"required"`
 		Number     int                `bson:"number" json:"number" binding:"required"`
 		Section    string             `bson:"section" json:"section" binding:"required"`
-		LongName string `bson:"longName" json:"LongName" binding:"required"`
-		Role string `json:"role" binding:"required"`
+		LongName   string             `bson:"longName" json:"longName" binding:"required"`
+		Role       string             `json:"role" binding:"required"`
 	}
 )
