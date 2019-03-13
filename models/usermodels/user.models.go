@@ -27,11 +27,11 @@ type (
 	// User a default User struct to represent a User in Tyr.
 	MongoUser struct {
 		ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" binding:"required"`
-		Admin           bool               `bson:"admin" json:"admin`
+		Admin           bool               `bson:"admin" json:"admin"`
 		Email           string             `bson:"email" json:"email" binding:"required"`
-		Password        []byte             `bson:"password" json:"password" binding:"required"`
-		First           string             `bson:"firstName" json:"first_name" binding:"required"`
-		Last            string             `bson:"lastName" json:"last_name" binding:"required"`
+		Password        []byte             `bson:"password" json:"-" binding:"required"`
+		First           string             `bson:"firstName" json:"firstName" binding:"required"`
+		Last            string             `bson:"lastName" json:"lastName" binding:"required"`
 		EnrolledCourses []EnrolledCourse   `bson:"enrolledCourses" json:"enrolledCourses" binding:"required"`
 	}
 
@@ -66,6 +66,20 @@ func (u *UserInterface) FindOne(email string) (*MongoUser, errors.APIError) {
 	var user *MongoUser
 
 	res := u.col.FindOne(u.ctx, bson.M{"email": email}, options.FindOne())
+	res.Decode(&user)
+	fmt.Println("user", user)
+
+	if user == nil {
+		return nil, errors.ErrorResourceNotFound
+	}
+
+	return user, nil
+}
+
+func (u *UserInterface) FindOneById(uid interface{}) (*MongoUser, errors.APIError) {
+	var user *MongoUser
+
+	res := u.col.FindOne(u.ctx, bson.M{"_id": uid}, options.FindOne())
 	res.Decode(&user)
 	fmt.Println("user", user)
 

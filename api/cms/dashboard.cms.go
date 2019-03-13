@@ -12,6 +12,13 @@ func Dashboard(c *gin.Context) {
 	uid, _ := c.Get("uid")
 
 	claims := jwt.ExtractClaims(c)
+
+	user, err := um.FindOneById(uid)
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+
 	courses, err := um.GetCourses(uid, claims["courses"].(map[string]interface{}))
 	if err != nil {
 		c.Set("error", err)
@@ -38,6 +45,7 @@ func Dashboard(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"status_code":           200,
 		"msg":                   "User's Info.",
+		"user":                  user,
 		"courses":               courses,
 		"assignments":           assignments,
 		"mostRecentSubmissions": submissions,
