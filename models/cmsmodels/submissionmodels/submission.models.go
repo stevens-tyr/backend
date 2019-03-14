@@ -78,27 +78,80 @@ func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmi
 	return submissions, nil
 }
 
-func (s *SubmissionInterface) GetUsersSubmissionsLimited(uid interface{}, limit int64) ([]MongoSubmission, errors.APIError) {
-	var submissions []MongoSubmission
-	cur, err := s.col.Find(
-		s.ctx,
+// GetUsersRecentSubmissions grabs the most recent submissions up until limit
+func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit int64) (map[string]interface{}, errors.APIError) {
+	query := []interface{}{
+		bson.M{"$match": bson.M{"userID": uid}},
 		bson.M{
-			"userID": uid,
+			"$lookup": bson.M{
+				"from": "courses",
+				"let": bson.M{ "assID": "$assignmentID" },
+				"pipeline": bson.A{
+					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$$assID", "$assignments"} } } },
+					bson.M{
+						"$project": bson.M{
+							"professors": 0,
+							"assistants": 0,
+							"students": 0,
+							"assignments": 0,
+						},
+					},
+				},
+				"as": "course",
+			},
 		},
-		options.Find().SetLimit(limit).SetSort(bson.M{"$natural": -1}),
-	)
-
-	for cur.Next(s.ctx) {
-		var submission MongoSubmission
-		err = cur.Decode(&submission)
-		if err != nil {
-			return submissions, errors.ErrorInvlaidBSON
-		}
-
-		submissions = append(submissions, submission)
+		bson.M{
+			"$lookup": bson.M{
+				"from": "assignments",
+				"let": bson.M{ "assID": "$assignmentID" },
+				"pipeline": bson.A{
+					bson.M{
+						"$match": bson.M{
+							"$expr": bson.M{ "$eq": bson.A{"$_id", "$$assID"} } } },
+					bson.M{
+						"$project": bson.M{
+							"tests": 0,
+							"submissions": 0,
+							"testBuildCMD": 0,
+						},
+					},
+				},
+				"as": "assignment",
+			},
+		},
+		bson.M{
+			"$project": bson.M{
+				"course": bson.M{ "$arrayElemAt": bson.A{"$course", 0} },
+				"assignmentID": 1,
+				"submissionDate": 1,
+				"file": 1,
+				"errorTesting": 1,
+				"cases.studentFacing": 1,
+				"assignment": bson.M{ "$arrayElemAt": bson.A{"$assignment", 0} },
+			},
+		},
+		bson.M{ "$sort": bson.M{ "submissionDate": -1 } },
 	}
 
-	return submissions, nil
+
+	var recentSubmissions map[string]interface{}
+	cur, err := s.col.Aggregate(
+		s.ctx,
+		query,
+		options.Aggregate(),
+	)
+	if err != nil {
+		return nil, errors.ErrorInvlaidBSON
+	}
+
+	for cur.Next(s.ctx) {
+		err = cur.Decode(&recentSubmissions)
+		if recentSubmissions == nil {
+			return nil, errors.ErrorResourceNotFound
+		}
+	}
+
+	return recentSubmissions, nil
 }
 
 func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSubmission, errors.APIError) {

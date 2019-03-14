@@ -36,7 +36,7 @@ func Dashboard(c *gin.Context) {
 		assignments = append(assignments, courseAssignments...)
 	}
 
-	submissions, err := sm.GetUsersSubmissionsLimited(uid, 5)
+	submissions, err := sm.GetUsersRecentSubmissions(uid, 5)
 	if err != nil {
 		c.Set("error", err)
 		return
