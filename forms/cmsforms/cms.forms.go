@@ -23,14 +23,14 @@ type (
 		Emails []string `json:"emails" binding:"required"`
 	}
 
-	test struct {
-		Name           string `json:"name" binding:"required"`
-		ExpectedOutput string `json:"expectedOutput" binding:"required"`
-		StudentFacing  bool   `json:"studentFacing" binding:"exists"`
-		TestCMD        string `json:"testCMD" binding:"required"`
+	CreateAssginmentTest struct {
+		Name           string `json:"name"`
+		ExpectedOutput string `json:"expectedOutput"`
+		StudentFacing  bool   `json:"studentFacing"`
+		TestCMD        string `json:"testCMD"`
 	}
 
-	CreateAssignment struct {
+	CreateAssignmentPreParse struct {
 		Language     string             `form:"language" binding:"required"`
 		Version      string             `form:"version"`
 		Name         string             `form:"name" binding:"required"`
@@ -38,7 +38,18 @@ type (
 		Description  string             `form:"description" binding:"required"`
 		DueDate      primitive.DateTime `form:"dueDate" binding:"required"`
 		TestBuildCMD string             `form:"TestBuildCMD"`
-		Tests        []test             `form:"tests" binding:"required"`
+		Tests        []string             `form:"tests" binding:"required"`
+	}
+
+	CreateAssignmentPostParse struct {
+		Language     string
+		Version      string
+		Name         string
+		NumAttempts  int
+		Description  string
+		DueDate      primitive.DateTime
+		TestBuildCMD string
+		Tests        []CreateAssginmentTest
 	}
 
 	CreateCourse struct {

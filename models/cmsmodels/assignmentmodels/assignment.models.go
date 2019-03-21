@@ -64,7 +64,7 @@ func New() *AssignmentInterface {
 	}
 }
 
-func (a *AssignmentInterface) Create(form forms.CreateAssignmentForm, cid string) (*primitive.ObjectID, string, errors.APIError) {
+func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid string) (*primitive.ObjectID, string, errors.APIError) {
 	tests := make([]Test, len(form.Tests))
 	for index := range form.Tests {
 		tests[index] = Test(form.Tests[index])

@@ -61,7 +61,7 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	uid, _ := claims["uid"]
+	uid, _ := c.Get("uid")
 
 	// See if previous submission exists
 	//cid := c.Param("cid")

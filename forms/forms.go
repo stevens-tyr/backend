@@ -12,7 +12,8 @@ type (
 	CourseAddUserForm cmsf.CourseAddUser
 	CourseBulkAddUserForm cmsf.CourseBulkAddUser
 
-	CreateAssignmentForm cmsf.CreateAssignment
+	CreateAssignmentPreForm cmsf.CreateAssignmentPreParse
+	CreateAssignmentPostForm cmsf.CreateAssignmentPostParse
 	CreateCourseForm cmsf.CreateCourse
 
 	GradeAggQuery cmsf.GradeAgg
