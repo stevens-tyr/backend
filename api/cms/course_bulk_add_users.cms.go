@@ -11,29 +11,29 @@ import (
 func CourseAddUsers(c *gin.Context) {
   cid, _ := c.Get("cid")
 
-  var addUsers []forms.CourseAddUserForm
+  var addUsers forms.CourseBulkAddUserForm
   if err := c.ShouldBindJSON(&addUsers); err != nil {
     c.Set("error", errors.ErrorInvlaidJSON)
     return
   }
 
-  for _, addUser := range addUsers {
-    fmt.Println(addUser.Email)
+  for _, email := range addUsers.Emails {
+    fmt.Println(email)
 
-    user, err := um.FindOne(addUser.Email)
+    user, err := um.FindOne(email)
     if err != nil {
       c.Set("error", err)
       return
     }
     fmt.Println("plz")
 
-    err = um.AddCourse(addUser.Level, cid, user.ID)
+    err = um.AddCourse(addUsers.Level, cid, user.ID)
     if err != nil {
       c.Set("error", err)
       return
     }
 
-    err = cm.AddUser(addUser.Level, user.ID, cid)
+    err = cm.AddUser(addUsers.Level, user.ID, cid)
     if err != nil {
       c.Set("error", err)
 

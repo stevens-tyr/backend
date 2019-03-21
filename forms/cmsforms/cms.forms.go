@@ -18,6 +18,11 @@ type (
 		Email string `json:"email" binding:"required"`
 	}
 
+	CourseBulkAddUser struct {
+		Level string `json:"level" binding:"required"`
+		Emails []string `json:"emails" binding:"required"`
+	}
+
 	test struct {
 		Name           string `json:"name" binding:"required"`
 		ExpectedOutput string `json:"expectedOutput" binding:"required"`

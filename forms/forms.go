@@ -10,6 +10,7 @@ type (
 
 	CourseAggQuery cmsf.CourseAgg
 	CourseAddUserForm cmsf.CourseAddUser
+	CourseBulkAddUserForm cmsf.CourseBulkAddUser
 
 	CreateAssignmentForm cmsf.CreateAssignment
 	CreateCourseForm cmsf.CreateCourse

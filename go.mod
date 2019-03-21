@@ -2,6 +2,7 @@ module backend
 
 require (
 	github.com/appleboy/gin-jwt v0.0.0-20190216100112-ca1084e5d5a2
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.3.0
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/goware/emailx v0.0.0-20171023230436-0bae9679d4e3
