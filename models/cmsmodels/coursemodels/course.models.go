@@ -209,9 +209,7 @@ func (c *CourseInterface) UserExists(cid, uid interface{}) (bool, errors.APIErro
 		{"_id", cid},
 		{
 			"$or", bson.A{
-				bson.M{"assistants": bson.M{"$elemMatch": uid}},
-				bson.M{"professors": bson.M{"$elemMatch": uid}},
-				bson.M{"students": bson.M{"$elemMatch": uid}},
+				bson.M{"students": uid},
 			},
 		},
 	}

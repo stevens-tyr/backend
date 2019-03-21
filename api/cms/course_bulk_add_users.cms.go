@@ -1,7 +1,6 @@
 package cms
 
 import (
-  "fmt"
   "github.com/gin-gonic/gin"
 
   "backend/errors"
@@ -18,16 +17,13 @@ func CourseAddUsers(c *gin.Context) {
   }
 
   for _, email := range addUsers.Emails {
-    fmt.Println(email)
-
     user, err := um.FindOne(email)
     if err != nil {
       c.Set("error", err)
       return
     }
-    fmt.Println("plz")
 
-    err = um.AddCourse(addUsers.Level, cid, user.ID)
+		err = um.AddCourse(addUsers.Level, cid, user.ID)
     if err != nil {
       c.Set("error", err)
       return
@@ -36,7 +32,6 @@ func CourseAddUsers(c *gin.Context) {
     err = cm.AddUser(addUsers.Level, user.ID, cid)
     if err != nil {
       c.Set("error", err)
-
       return
     }
   }

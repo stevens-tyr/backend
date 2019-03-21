@@ -18,7 +18,7 @@ func allowed(levels []string, claims map[string]interface{}, c *gin.Context) boo
 
 	val, found := enrolledCourses[cid.(string)]
 	c.Set("role", val)
-	// fmt.Println("cid:", cid, levels, val)
+	 fmt.Println("cid:", cid, levels, val)
 	if found && (in(levels, "any") || in(levels, val.(string))) {
 		return true
 	}
@@ -88,7 +88,7 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 	c.Set("uid", val)
 
 	userLevelForRouteShouldBe := determineLevel(route)
-	// fmt.Println("user level:", userLevelForRouteShouldBe, route)
+	fmt.Println("user level:", userLevelForRouteShouldBe, route)
 	if in(userLevelForRouteShouldBe, "whitelisted") {
 		return true
 	}
