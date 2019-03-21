@@ -57,4 +57,21 @@ type (
 		LongName   string             `bson:"longName" json:"longName" binding:"required"`
 		Role       string             `json:"role" binding:"required"`
 	}
+
+	sub struct {
+		Time primitive.DateTime `form:"submissionTime""`
+		Attempt int `bson:"attemptNumber"`
+		
+	}
+	
+	student struct {
+		ID  primitive.ObjectID `bson:"_id,omitempty"`
+		First string `bson:"firstName"`
+		Last string `bson:"lastName"`
+		Subs []sub `bson:"submissions"`
+	}
+	
+	GradeAgg struct {
+		Students []student `bson:"students"`
+	}
 )

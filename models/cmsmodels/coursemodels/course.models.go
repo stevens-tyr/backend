@@ -1,8 +1,11 @@
 package assignmentmodels
 
 import (
+	"bytes"
 	"context"
 	"os"
+	"strconv"
+	"encoding/csv"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
@@ -209,6 +212,8 @@ func (c *CourseInterface) UserExists(cid, uid interface{}) (bool, errors.APIErro
 		{"_id", cid},
 		{
 			"$or", bson.A{
+				bson.M{"assitants": uid},
+				bson.M{"professors": uid},
 				bson.M{"students": uid},
 			},
 		},
@@ -322,4 +327,104 @@ func (c *CourseInterface) GetAssignments(cid interface{}, role string) ([]forms.
 	}
 
 	return assignments, nil
+}
+
+func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, string, int64, errors.APIError){
+	userLookup := func(userType string) bson.M {
+		return bson.M{
+			"$lookup": bson.M{
+				"from": "users",
+				"let": bson.M{ "userType": "$" + userType },
+				"pipeline": bson.A{
+					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$_id", "$$userType"}, } } },
+					bson.M{ "$project": bson.M{ "admin": 0, "email": 0, "enrolledCourses": 0, "password": 0 }},
+					bson.M{
+						"$lookup": bson.M{
+							"from": "submissions",
+							"let": bson.M{"uid": "$_id"},
+							"pipeline": bson.A{
+								bson.M{
+									"$match": bson.M{
+										"$expr": bson.M{
+											"$and": bson.A{
+												bson.M{"$eq": bson.A{"$assignmentID", aid}},
+												bson.M{"$eq": bson.A{"$userID", "$$uid"}},
+											},
+										},
+									},
+								},
+								bson.M{ "$sort": bson.M{ "submissionDate": -1} },
+								bson.M{ "$project": bson.M{ "_id": 0, "assignmentID": 0, "userID": 0, "file": 0 }},
+								bson.M{ "$limit": 1},
+							},
+							"as": "submissions",
+						},
+					},
+				},
+				"as": userType,
+			},
+		}
+	}
+	
+	query := []interface{}{
+		bson.M{"$match": bson.M{"_id": cid}},
+		userLookup("students"),
+		bson.M{
+			"$project": bson.M{
+				"_id": 0,
+				"assignments": 0,
+				"assistants": 0,
+				"department": 0,
+				"longName": 0,
+				"number": 0,
+				"professors": 0,
+				"section": 0,
+				"semester": 0,
+			},
+		},
+	}
+
+	var results forms.GradeAggQuery
+	cur, err := c.col.Aggregate(
+		c.ctx,
+		query,
+		options.Aggregate(),
+	)
+	if err != nil {
+		return nil, "", 0, errors.ErrorInvlaidBSON
+	}
+	
+	for cur.Next(c.ctx) {
+		err = cur.Decode(&results)
+		if err != nil {
+			return nil, "", 0, errors.ErrorResourceNotFound
+		}
+	}
+
+	records := [][]string{
+		{"First Name", "Last Name", "Grade", "TestCases", "Attempt Number", "Submission Time"},
+	}
+
+	for _, student := range results.Students {
+		var grade, attempt string
+		if len(student.Subs) > 0 {
+			sub := student.Subs[0]
+			grade = "100"
+			attempt = strconv.Itoa(sub.Attempt)
+		} else {
+			grade = "0"
+			attempt = "0"
+		}
+		records = append(records, []string{student.First, student.Last, grade, attempt, "0"})
+	}
+
+	csvBytes := &bytes.Buffer{}
+	writer := csv.NewWriter(csvBytes)
+	err = writer.WriteAll(records)
+	if err != nil {
+		return nil, "", 0, errors.ErrorFailedToWriteCSV
+	}
+	writer.Flush()
+	
+	return csvBytes, "filename", int64(csvBytes.Len()), nil
 }

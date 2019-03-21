@@ -19,6 +19,7 @@ type (
 	FacingTests struct {
 		Pass int `bson:"pass" json:"pass" binding:"required"`
 		Fail int `bson:"fail" json:"fail" binding:"required"`
+		Results string `bson:"results" json:"results" binding:"required"`
 	}
 
 	// Cases struct to store tests/failed passed for admin/student

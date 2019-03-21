@@ -21,11 +21,6 @@ import (
 func SubmitAssignment(c *gin.Context) {
 	sub, err := c.FormFile("submission")
 	if err != nil {
-		// msg := "Problem uploading submission."
-		// if err == http.ErrMissingFile {
-		// 	msg = "Please upload your submission."
-		// }
-
 		c.Set("error", err)
 		return
 	}
@@ -33,12 +28,6 @@ func SubmitAssignment(c *gin.Context) {
 	submissionFiles, err := utils.CheckFileType(sub)
 	if err != nil {
 		c.Set("error", err)
-		// tyrgin.ErrorHandler(err, c, 400, gin.H{
-		// 	"status_code":   400,
-		// 	"message":       "Incorrect file type for submission.",
-		// 	"allowed_types": []string{".zip", ".tar.gz"},
-		// 	"error":         err.Error(),
-		// })
 		return
 	}
 

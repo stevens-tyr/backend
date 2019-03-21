@@ -43,6 +43,7 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/assignment/:aid/submission/download/:sid/:num", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetAssignment, "course/:cid/assignment/:aid/details", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetCourse, "course/:cid", tyrgin.GET),
+		tyrgin.NewRoute(cms.GradesAsCSV, "course/:cid/assignment/:aid/csv", tyrgin.GET),
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/assignment/submit/:aid", tyrgin.POST),
 	}
 

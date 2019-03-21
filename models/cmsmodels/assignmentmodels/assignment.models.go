@@ -39,7 +39,7 @@ type (
 		Version         string                 `bson:"version" form:"version" binding:"required" json:"version"`
 		Name            string                 `bson:"name" form:"name" binding:"required" json:"name"`
 		NumAttempts     int                    `bson:"numAttempts" form:"numAttempts" binding:"required" json:"numAttempts"`
-		Description     string                 `bson:"description" form:"description" binding:"required" json:"description"`
+		Description     string                  `bson:"description" form:"description" binding:"required" json:"description"`
 		DueDate         primitive.DateTime     `bson:"dueDate" form:"dueDate" binding:"required" json:"dueDate"`
 		Published       bool                   `bson:"published" form:"published" binding:"required" json:"-"`
 		SupportingFiles string                 `bson:"supportingFiles" form:"supportingFiles" json:"supportingFiles"`
@@ -226,3 +226,8 @@ func (a *AssignmentInterface) AsFile(aid interface{}) (*bytes.Reader, string, in
 
 	return bytes.NewReader(jsonBytes), assignment.Name, int64(len(jsonBytes)), nil
 }
+
+func (a *AssignmentInterface) CreateAssignmentFromFile() {
+	return
+}
+

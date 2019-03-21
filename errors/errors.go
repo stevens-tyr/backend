@@ -55,4 +55,5 @@ var (
 	ErrorFailedToOpenFile            = &Error{errors.New("FAILED TO OPEN FILE"), http.StatusInternalServerError}
 	ErrorFailedToReadFile            = &Error{errors.New("FAILED TO READ FILE"), http.StatusInternalServerError}
 	ErrorFailedToConvertStructToJSON = &Error{errors.New("FAILED TO CONVERT STRUCT TO JSON"), http.StatusInternalServerError}
+	ErrorFailedToWriteCSV = &Error{errors.New("FAILED TO WRITE TO CSV"), http.StatusInternalServerError}
 )
