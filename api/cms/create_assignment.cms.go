@@ -1,7 +1,6 @@
 package cms
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
@@ -49,7 +48,7 @@ func CreateAssignment(c *gin.Context) {
 		capre.TestBuildCMD,
 		tests,
 	}	
-
+ 
 	cids, _ := c.Get("cids")
 	aid, supportingFilesName, err := am.Create(capost, cids.(string))
 	if err != nil {
@@ -93,12 +92,21 @@ func CreateAssignmentFromFile(c *gin.Context) {
 		c.Set("error", errors.ErrorUploadingFile)
 		return
 	}
-	af, _ := afs.Open()
-	byteAF, _ := ioutil.ReadAll(af)
+	
+	af, errs := afs.Open()
+	if errs != nil {
+		c.Set("error", errors.ErrorFailedToOpenFile)
+		return
+	}
+	
+	byteAF, errs := ioutil.ReadAll(af)
+	if errs != nil {
+		c.Set("error", errors.ErrorFailedToReadFile)
+		return
+	}
 	
 	var ca forms.CreateAssignmentPostForm
 	json.Unmarshal(byteAF, &ca)
-	fmt.Println("ja?", ca)
 		
 	cids, _ := c.Get("cids")
 	aid, supportingFilesName, err := am.Create(ca, cids.(string))
