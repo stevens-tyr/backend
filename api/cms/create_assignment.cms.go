@@ -1,9 +1,10 @@
 package cms
 
 import (
+	"fmt"
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,6 @@ func CreateAssignment(c *gin.Context) {
 	var capre forms.CreateAssignmentPreForm
 	err := c.ShouldBind(&capre)
 	if err != nil {
-		fmt.Println("fuck", err)
 		c.Set("error", errors.ErrorInvlaidJSON)
 		return
 	}
@@ -82,6 +82,56 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
+	c.JSON(200, gin.H{
+		"message": "Assignment Created.",
+	})
+}
+
+func CreateAssignmentFromFile(c *gin.Context) {
+	afs, errs := c.FormFile("assignment")
+	if errs != nil && errs != http.ErrMissingFile {
+		c.Set("error", errors.ErrorUploadingFile)
+		return
+	}
+	af, _ := afs.Open()
+	byteAF, _ := ioutil.ReadAll(af)
+	
+	var ca forms.CreateAssignmentPostForm
+	json.Unmarshal(byteAF, &ca)
+	fmt.Println("ja?", ca)
+		
+	cids, _ := c.Get("cids")
+	aid, supportingFilesName, err := am.Create(ca, cids.(string))
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+
+	cid, _ := c.Get("cid")
+	err = cm.AddAssignment(*aid, cid)
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+
+	sf, errs := c.FormFile("supportingFiles")
+	if errs != nil && errs != http.ErrMissingFile {
+		c.Set("error", errors.ErrorUploadingFile)
+		return
+	}
+
+	supportingFiles, err := utils.CheckFileType(sf)
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+
+	err = gfs.Upload(*aid, supportingFilesName, bytes.NewReader(supportingFiles))
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+	
 	c.JSON(200, gin.H{
 		"message": "Assignment Created.",
 	})

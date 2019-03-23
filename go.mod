@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.3.0
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/goware/emailx v0.0.0-20171023230436-0bae9679d4e3
+	github.com/graphql-go/graphql v0.7.7
 	github.com/h2non/filetype v1.0.8
 	github.com/kr/pty v1.1.3 // indirect
 	github.com/mattn/go-colorable v0.1.0 // indirect
