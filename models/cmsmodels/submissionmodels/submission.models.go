@@ -80,7 +80,7 @@ func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmi
 }
 
 // GetUsersRecentSubmissions grabs the most recent submissions up until limit
-func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit int64) (map[string]interface{}, errors.APIError) {
+func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit int64) ([]map[string]interface{}, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"userID": uid}},
 		bson.M{
@@ -132,10 +132,10 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 			},
 		},
 		bson.M{ "$sort": bson.M{ "submissionDate": -1 } },
+		bson.M{ "$limit": limit },
 	}
 
-
-	var recentSubmissions map[string]interface{}
+	var recentSubmissions []map[string]interface{}
 	cur, err := s.col.Aggregate(
 		s.ctx,
 		query,
@@ -146,10 +146,12 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 	}
 
 	for cur.Next(s.ctx) {
-		err = cur.Decode(&recentSubmissions)
-		if recentSubmissions == nil {
+		var submission map[string]interface{}
+		err = cur.Decode(&submission)
+		if submission == nil {
 			return nil, errors.ErrorResourceNotFound
 		}
+		recentSubmissions = append(recentSubmissions, submission)
 	}
 
 	return recentSubmissions, nil
