@@ -11,6 +11,7 @@ type (
 		DueDate   primitive.DateTime `bson:"dueDate" json:"dueDate" binding:"required"`
 		Name      string             `bson:"name" json:"name" binding:"required"`
 		Published bool               `bson:"published" json:"-" binding:"required"`
+		CourseID  primitive.ObjectID `bson:"courseID" json:"courseID" binding:",omitempty"`
 	}
 
 	CourseAddUser struct {
@@ -19,11 +20,11 @@ type (
 	}
 
 	CourseBulkAddUser struct {
-		Level string `json:"level" binding:"required"`
+		Level  string   `json:"level" binding:"required"`
 		Emails []string `json:"emails" binding:"required"`
 	}
 
-	CreateAssginmentTest struct {
+	CreateAssignmentTest struct {
 		Name           string `json:"name"`
 		ExpectedOutput string `json:"expectedOutput"`
 		StudentFacing  bool   `json:"studentFacing"`
@@ -38,7 +39,7 @@ type (
 		Description  string             `form:"description" binding:"required"`
 		DueDate      primitive.DateTime `form:"dueDate" binding:"required"`
 		TestBuildCMD string             `form:"TestBuildCMD"`
-		Tests        []string             `form:"tests" binding:"required"`
+		Tests        []string           `form:"tests" binding:"required"`
 	}
 
 	CreateAssignmentPostParse struct {
@@ -49,7 +50,7 @@ type (
 		Description  string
 		DueDate      primitive.DateTime
 		TestBuildCMD string
-		Tests        []CreateAssginmentTest
+		Tests        []CreateAssignmentTest
 	}
 
 	CreateCourse struct {
@@ -70,18 +71,17 @@ type (
 	}
 
 	sub struct {
-		Time primitive.DateTime `form:"submissionTime""`
-		Attempt int `bson:"attemptNumber"`
-		
+		Time    primitive.DateTime `form:"submissionTime""`
+		Attempt int                `bson:"attemptNumber"`
 	}
-	
+
 	student struct {
-		ID  primitive.ObjectID `bson:"_id,omitempty"`
-		First string `bson:"firstName"`
-		Last string `bson:"lastName"`
-		Subs []sub `bson:"submissions"`
+		ID    primitive.ObjectID `bson:"_id,omitempty"`
+		First string             `bson:"firstName"`
+		Last  string             `bson:"lastName"`
+		Subs  []sub              `bson:"submissions"`
 	}
-	
+
 	GradeAgg struct {
 		Students []student `bson:"students"`
 	}

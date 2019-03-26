@@ -31,13 +31,13 @@ func CreateAssignment(c *gin.Context) {
 	}
 	versionCheck(&capre)
 
-	var tests []cmsforms.CreateAssginmentTest
+	var tests []cmsforms.CreateAssignmentTest
 	for _, test := range capre.Tests {
-		var toAdd cmsforms.CreateAssginmentTest
+		var toAdd cmsforms.CreateAssignmentTest
 		json.Unmarshal([]byte(test), &toAdd)
 		tests = append(tests, toAdd)
 	}
-	
+
 	capost := forms.CreateAssignmentPostForm{
 		capre.Language,
 		capre.Version,
@@ -47,8 +47,8 @@ func CreateAssignment(c *gin.Context) {
 		capre.DueDate,
 		capre.TestBuildCMD,
 		tests,
-	}	
- 
+	}
+
 	cids, _ := c.Get("cids")
 	aid, supportingFilesName, err := am.Create(capost, cids.(string))
 	if err != nil {
@@ -92,22 +92,22 @@ func CreateAssignmentFromFile(c *gin.Context) {
 		c.Set("error", errors.ErrorUploadingFile)
 		return
 	}
-	
+
 	af, errs := afs.Open()
 	if errs != nil {
 		c.Set("error", errors.ErrorFailedToOpenFile)
 		return
 	}
-	
+
 	byteAF, errs := ioutil.ReadAll(af)
 	if errs != nil {
 		c.Set("error", errors.ErrorFailedToReadFile)
 		return
 	}
-	
+
 	var ca forms.CreateAssignmentPostForm
 	json.Unmarshal(byteAF, &ca)
-		
+
 	cids, _ := c.Get("cids")
 	aid, supportingFilesName, err := am.Create(ca, cids.(string))
 	if err != nil {
@@ -139,7 +139,7 @@ func CreateAssignmentFromFile(c *gin.Context) {
 		c.Set("error", err)
 		return
 	}
-	
+
 	c.JSON(200, gin.H{
 		"message": "Assignment Created.",
 	})
