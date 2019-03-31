@@ -128,6 +128,7 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 				"file": 1,
 				"errorTesting": 1,
 				"cases.studentFacing": 1,
+				"attemptNumber": 1,
 				"assignment": bson.M{ "$arrayElemAt": bson.A{"$assignment", 0} },
 			},
 		},
