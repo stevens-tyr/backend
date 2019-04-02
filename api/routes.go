@@ -48,7 +48,14 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/assignment/submit/:aid", tyrgin.POST),
 	}
 
+	var cmsEndpoints = []tyrgin.APIAction{
+		tyrgin.NewRoute(cms.JobDownloadSubmission, "job/submission/:sid/download", tyrgin.GET),
+		tyrgin.NewRoute(cms.JobDownloadSupportingFiles, "job/assignment/:aid/supportinfiles/download", tyrgin.GET),
+		tyrgin.NewRoute(auth.Register, "register", tyrgin.POST),
+	}
+
 	tyrgin.AddRoutes(server, true, auth.AuthMiddleware, "1", "plague_doctor", secureCmsEndpoints)
+	tyrgin.AddRoutes(server, false, auth.AuthMiddleware, "1", "plague_doctor", cmsEndpoints)
 
 	server.NoRoute(tyrgin.NotFound)
 
