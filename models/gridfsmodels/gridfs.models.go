@@ -32,8 +32,15 @@ func New() *GridFSInterface {
   }
 }
 
-func (g *GridFSInterface) Upload(fileID interface{}, filename string, file io.Reader) errors.APIError {
-  err := g.bucket.GridFSUploadFile(primitive.NewObjectID(), filename, file)
+func (g *GridFSInterface) Upload(fileID interface{}, id *primitive.ObjectID, filename string, file io.Reader) errors.APIError {
+	var nid primitive.ObjectID
+	if id == nil {
+		nid = primitive.NewObjectID()
+	} else {
+		nid = *id
+	}
+	
+  err := g.bucket.GridFSUploadFile(nid, filename, file)
   if err != nil {
     return errors.ErrorGridFSUploadFailure
   }

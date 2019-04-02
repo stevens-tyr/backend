@@ -56,4 +56,5 @@ var (
 	ErrorFailedToReadFile            = &Error{errors.New("FAILED TO READ FILE"), http.StatusInternalServerError}
 	ErrorFailedToConvertStructToJSON = &Error{errors.New("FAILED TO CONVERT STRUCT TO JSON"), http.StatusInternalServerError}
 	ErrorFailedToWriteCSV = &Error{errors.New("FAILED TO WRITE TO CSV"), http.StatusInternalServerError}
+	ErrorInvalidJobSecret = &Error{errors.New("INVALID JOB SECRET"), http.StatusUnauthorized}
 )

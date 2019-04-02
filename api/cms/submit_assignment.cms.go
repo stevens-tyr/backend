@@ -53,7 +53,7 @@ func SubmitAssignment(c *gin.Context) {
 	}
 
 	sid := primitive.NewObjectID()
-	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"], sid.String())
+	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"], sid.Hex())
 	reader := bytes.NewReader(submissionFiles)
 	err = bucket.GridFSUploadFile(sid, submittedFilesName, reader)
 	if err != nil {

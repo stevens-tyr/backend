@@ -50,7 +50,7 @@ func CreateAssignment(c *gin.Context) {
 	}
 
 	cids, _ := c.Get("cids")
-	aid, supportingFilesName, err := am.Create(capost, cids.(string))
+	aid, supportingFilesID, err := am.Create(capost, cids.(string))
 	if err != nil {
 		c.Set("error", err)
 		return
@@ -75,7 +75,7 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	err = gfs.Upload(*aid, supportingFilesName, bytes.NewReader(supportingFiles))
+	err = gfs.Upload(*aid, supportingFilesID, capre.Name, bytes.NewReader(supportingFiles))
 	if err != nil {
 		c.Set("error", err)
 		return
@@ -109,7 +109,7 @@ func CreateAssignmentFromFile(c *gin.Context) {
 	json.Unmarshal(byteAF, &ca)
 
 	cids, _ := c.Get("cids")
-	aid, supportingFilesName, err := am.Create(ca, cids.(string))
+	aid, supportingFilesID, err := am.Create(ca, cids.(string))
 	if err != nil {
 		c.Set("error", err)
 		return
@@ -134,7 +134,7 @@ func CreateAssignmentFromFile(c *gin.Context) {
 		return
 	}
 
-	err = gfs.Upload(*aid, supportingFilesName, bytes.NewReader(supportingFiles))
+	err = gfs.Upload(*aid, supportingFilesID, ca.Name, bytes.NewReader(supportingFiles))
 	if err != nil {
 		c.Set("error", err)
 		return

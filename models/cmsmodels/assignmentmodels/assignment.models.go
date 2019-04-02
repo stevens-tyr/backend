@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -79,14 +78,14 @@ func New() *AssignmentInterface {
 	}
 }
 
-func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid string) (*primitive.ObjectID, string, errors.APIError) {
+func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid string) (*primitive.ObjectID, *primitive.ObjectID, errors.APIError) {
 	tests := make([]Test, len(form.Tests))
 	for index := range form.Tests {
 		tests[index] = Test(form.Tests[index])
 	}
 
 	aid := primitive.NewObjectID()
-	supportingFiles := fmt.Sprintf("%s.%s.supportingFiles.tar.gz", cid, aid)
+	supportingFiles := primitive.NewObjectID()
 	assign := MongoAssignment{
 		ID:              aid,
 		Language:        form.Language,
@@ -94,7 +93,7 @@ func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid st
 		Name:            form.Name,
 		NumAttempts:     form.NumAttempts,
 		Description:     form.Description,
-		SupportingFiles: supportingFiles,
+		SupportingFiles: supportingFiles.Hex(),
 		DueDate:         form.DueDate,
 		Published:       false,
 		TestBuildCMD:    form.TestBuildCMD,
@@ -104,10 +103,10 @@ func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid st
 
 	_, err := a.col.InsertOne(a.ctx, assign, options.InsertOne())
 	if err != nil {
-		return nil, "", errors.ErrorDatabaseFailedCreate
+		return nil, nil, errors.ErrorDatabaseFailedCreate
 	}
 
-	return &aid, supportingFiles, nil
+	return &aid, &supportingFiles, nil
 }
 
 func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.APIError) {
