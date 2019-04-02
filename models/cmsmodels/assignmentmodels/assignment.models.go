@@ -121,6 +121,33 @@ func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.API
 	return assign, nil
 }
 
+func (a *AssignmentInterface) Update(assign MongoAssignment) (errors.APIError) {
+	_, err := a.col.UpdateOne(
+		a.ctx,
+		bson.M{
+			"_id": assign.ID,
+		},
+		bson.M{
+			"$set": bson.M{
+				"language": assign.Language,
+				"version": assign.Version,
+				"name": assign.Name,
+				"description": assign.Description,
+				"dueDate": assign.DueDate,
+				"published": assign.Published,
+				"testBuildCMD": assign.TestBuildCMD,
+				"tests": assign.Tests,
+				"numAttempts": assign.NumAttempts,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+
+	return nil
+}
+
 func (a *AssignmentInterface) GetAsFile(aid interface{}) (*MongoAssignmentFile, errors.APIError) {
 	var assign *MongoAssignmentFile
 	res := a.col.FindOne(a.ctx, bson.M{"_id": aid}, options.FindOne())

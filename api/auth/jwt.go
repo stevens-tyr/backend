@@ -49,6 +49,8 @@ var routeLevels = map[string]map[string]string{
 		"course/:cid/assignment/create": "CreateAssignment",
 		"course/:cid/assignment/fromfile": "CreateAssignmentFromFile",
 		"course/:cid/assignment/:aid/csv": "GradesAsCSV",
+		"course/:cid/assignment/:aid/update": "UpdateAssignment",
+		"course/:cid/update": "UpdateCourse",
 	},
 	"teacher": {
 		"course/:cid/add/user":             "CourseAddUser",
@@ -57,6 +59,8 @@ var routeLevels = map[string]map[string]string{
 		"course/:cid/assignment/fromfile": "CreateAssignmentFromFile",
 		"course/:cid/assignment/:aid/file": "AssignmentAsFile",
 		"course/:cid/assignment/:aid/csv": "GradesAsCSV",
+		"course/:cid/assignment/:aid/update": "UpdateAssignment",
+		"course/:cid/update": "UpdateCourse",
 	},
 	"student": {
 		"course/:cid/:section/assignment/submit/:aid": "SubmitAssignment",

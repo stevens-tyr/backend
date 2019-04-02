@@ -17,7 +17,7 @@ type (
 	CreateCourseForm cmsf.CreateCourse
 
 	GradeAggQuery cmsf.GradeAgg
-
+	
 	UserLoginForm uf.LoginForm
 	UserRegisterForm uf.RegisterForm
 )

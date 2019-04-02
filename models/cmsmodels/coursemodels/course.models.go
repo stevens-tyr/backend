@@ -1,4 +1,4 @@
-package assignmentmodels
+package coursemodels
 
 import (
 	"bytes"
@@ -67,6 +67,41 @@ func (c *CourseInterface) FindOne(department, section, semester string, number i
 	}
 
 	return course, nil
+}
+
+func (c *CourseInterface) GetByID(cid interface{}) (*MongoCourse, errors.APIError) {
+	var course *MongoCourse
+
+	res := c.col.FindOne(c.ctx, bson.M{"_id": cid}, options.FindOne())
+	res.Decode(&course)
+
+	if course == nil {
+		return nil, errors.ErrorResourceNotFound
+	}
+
+	return course, nil
+}
+
+func (c *CourseInterface) Update(course MongoCourse) (errors.APIError) {
+	_, err := c.col.UpdateOne(
+		c.ctx,
+		bson.M{
+			"_id": course.ID,
+		},
+		bson.M{
+			"$set": bson.M{
+				"department": course.Department,
+				"longName": course.LongName,
+				"section": course.Section,
+				"semester": course.Semester,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+	
+	return nil
 }
 
 func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]interface{}, errors.APIError) {
