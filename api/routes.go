@@ -52,7 +52,7 @@ func SetUp() *gin.Engine {
 
 	var cmsEndpoints = []tyrgin.APIAction{
 		tyrgin.NewRoute(cms.JobDownloadSubmission, "job/:secret/submission/:sid/download", tyrgin.GET),
-		tyrgin.NewRoute(cms.JobDownloadSupportingFiles, "job/:secret/assignment/:aid/supportinfiles/download", tyrgin.GET),
+		tyrgin.NewRoute(cms.JobDownloadSupportingFiles, "job/:secret/assignment/:aid/supportingfiles/download", tyrgin.GET),
 		tyrgin.NewRoute(auth.Register, "register", tyrgin.POST),
 	}
 
