@@ -38,6 +38,7 @@ type (
 		File         string `bson:"file" json:"file" binding:"required"`
 		ErrorTesting bool   `bson:"errorTesting" json:"errorTesting" binding:"required"`
 		Cases        Cases  `bson:"cases" json:"cases" binding:"required"`
+		InProgress bool `bson:"inProgress" json:"inProgress"`
 	}
 
 	SubmissionInterface struct {
@@ -56,7 +57,7 @@ func New() *SubmissionInterface {
 	}
 }
 
-func (s *SubmissionInterface) Update(sid interface{}, sftp, sftf, aftp, aftf int) errors.APIError {
+func (s *SubmissionInterface) UpdateGrade(sid interface{}, sftp, sftf, aftp, aftf int) errors.APIError {
 	_, err := s.col.UpdateOne(
 		s.ctx,
 		bson.M{"_id": sid},
@@ -161,6 +162,7 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 				"errorTesting": 1,
 				"cases.studentFacing": 1,
 				"attemptNumber": 1,
+				"inProgress": 1,
 				"assignment": bson.M{ "$arrayElemAt": bson.A{"$assignment", 0} },
 			},
 		},
@@ -209,6 +211,24 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 	return submission, nil
 }
 
+func (s *SubmissionInterface) Update(sid interface{}, cases Cases, error bool) errors.APIError {
+	_, err := s.col.UpdateOne(
+		s.ctx,
+		bson.M{"_id": sid},
+		bson.M{
+			"$set": bson.M{
+				"errorTesting": error,
+				"cases": cases,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+	
+	return nil
+}
+
 func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, filename string) errors.APIError {
 	submission := MongoSubmission{
 		ID:            sid.(primitive.ObjectID),
@@ -218,20 +238,23 @@ func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, fil
 		ErrorTesting:  false,
 		Cases: Cases{
 			StudentFacing: FacingTests{
-				Pass: 10,
+				Pass: 0,
 				Fail: 0,
 			},
 			AdminFacing: FacingTests{
-				Pass: 12,
-				Fail: 3,
+				Pass: 0,
+				Fail: 0,
 			},
 		},
+		InProgress: true,
 	}
 
 	_, err := s.col.InsertOne(s.ctx, &submission, options.InsertOne())
 	if err != nil {
 		return errors.ErrorDatabaseFailedCreate
 	}
+
+	// call gradey boi here and the update document
 
 	return nil
 }

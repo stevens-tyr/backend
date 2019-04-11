@@ -35,7 +35,7 @@ func UpdateGrade(c *gin.Context) {
 		sub.Cases.AdminFacing.Fail = val.(int)
 	}
 	
-	err = sm.Update(
+	err = sm.UpdateGrade(
 		sid,
 		sub.Cases.StudentFacing.Pass,
 		sub.Cases.StudentFacing.Fail,
