@@ -28,6 +28,7 @@ func SetUp() *gin.Engine {
 
 	var secureAuthEndpoints = []tyrgin.APIAction{
 		tyrgin.NewRoute(auth.Check, "logged_in", tyrgin.GET),
+		tyrgin.NewRoute(auth.Logout, " logout", tyrgin.GET),
 	}
 	tyrgin.AddRoutes(server, false, auth.AuthMiddleware, "1", "auth", authEndpoints)
 	tyrgin.AddRoutes(server, true, auth.AuthMiddleware, "1", "auth", secureAuthEndpoints)
@@ -48,6 +49,7 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/assignment/submit/:aid", tyrgin.POST),
 		tyrgin.NewRoute(cms.UpdateAssignment, "course/:cid/assignment/:aid/update", tyrgin.PATCH),
 		tyrgin.NewRoute(cms.UpdateCourse, "course/:cid/update", tyrgin.PATCH),
+		tyrgin.NewRoute(cms.UpdateGrade, "course/:cid/submission/:sid/update", tyrgin.PATCH),
 	}
 
 	var cmsEndpoints = []tyrgin.APIAction{

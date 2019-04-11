@@ -51,6 +51,7 @@ var routeLevels = map[string]map[string]string{
 		"course/:cid/assignment/:aid/csv": "GradesAsCSV",
 		"course/:cid/assignment/:aid/update": "UpdateAssignment",
 		"course/:cid/update": "UpdateCourse",
+		"course/:cid/submission/:sid/update": "UpdateGrade",
 	},
 	"teacher": {
 		"course/:cid/add/user":             "CourseAddUser",
@@ -61,6 +62,7 @@ var routeLevels = map[string]map[string]string{
 		"course/:cid/assignment/:aid/csv": "GradesAsCSV",
 		"course/:cid/assignment/:aid/update": "UpdateAssignment",
 		"course/:cid/update": "UpdateCourse",
+		"course/:cid/submission/:sid/update": "UpdateGrade",
 	},
 	"student": {
 		"course/:cid/:section/assignment/submit/:aid": "SubmitAssignment",

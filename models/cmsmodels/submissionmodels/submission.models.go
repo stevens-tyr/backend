@@ -56,6 +56,38 @@ func New() *SubmissionInterface {
 	}
 }
 
+func (s *SubmissionInterface) Update(sid interface{}, sftp, sftf, aftp, aftf int) errors.APIError {
+	_, err := s.col.UpdateOne(
+		s.ctx,
+		bson.M{"_id": sid},
+		bson.M{
+			"$set": bson.M{
+				"cases.studentFacing.pass": sftp,
+				"cases.studentFacing.fail": sftf,
+				"cases.adminFacing.pass": aftp,
+				"cases.adminFacing.fail": aftf,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+
+	return nil
+}
+
+func (s *SubmissionInterface) Get(sid interface{}) (*MongoSubmission, errors.APIError) {
+	var sub *MongoSubmission
+	res :=s.col.FindOne(s.ctx, bson.M{"_id": sid}, options.FindOne())
+
+	err := res.Decode(&sub)
+	if err != nil {
+		return nil, errors.ErrorInvlaidBSON
+	}
+	
+	return sub, nil
+}
+
 func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmission, errors.APIError) {
 	var submissions []MongoSubmission
 	cur, err := s.col.Find(
