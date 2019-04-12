@@ -28,7 +28,7 @@ func SetUp() *gin.Engine {
 
 	var secureAuthEndpoints = []tyrgin.APIAction{
 		tyrgin.NewRoute(auth.Check, "logged_in", tyrgin.GET),
-		tyrgin.NewRoute(auth.Logout, " logout", tyrgin.GET),
+		tyrgin.NewRoute(auth.Logout, "logout", tyrgin.GET),
 	}
 	tyrgin.AddRoutes(server, false, auth.AuthMiddleware, "1", "auth", authEndpoints)
 	tyrgin.AddRoutes(server, true, auth.AuthMiddleware, "1", "auth", secureAuthEndpoints)
