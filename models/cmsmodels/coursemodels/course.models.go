@@ -82,6 +82,15 @@ func (c *CourseInterface) GetByID(cid interface{}) (*MongoCourse, errors.APIErro
 	return course, nil
 }
 
+func (c *CourseInterface) Delete(cid interface{}) errors.APIError {
+	_, err := c.col.DeleteOne(c.ctx, bson.M{"_id": cid}, options.Delete())
+	if err != nil {
+		return errors.ErrorDatabaseFailedDelete
+	}
+
+	return nil
+}
+
 func (c *CourseInterface) Update(course MongoCourse) (errors.APIError) {
 	_, err := c.col.UpdateOne(
 		c.ctx,
