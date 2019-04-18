@@ -240,10 +240,12 @@ func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, fil
 			StudentFacing: FacingTests{
 				Pass: 0,
 				Fail: 0,
+				Results: "ne",
 			},
 			AdminFacing: FacingTests{
 				Pass: 0,
 				Fail: 0,
+				Results: "ne",
 			},
 		},
 		InProgress: true,
