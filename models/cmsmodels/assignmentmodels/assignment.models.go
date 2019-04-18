@@ -109,6 +109,15 @@ func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid st
 	return &aid, &supportingFiles, nil
 }
 
+func (a *AssignmentInterface) Delete(aid interface{}) errors.APIError {
+	_, err := a.col.DeleteOne(a.ctx, bson.M{"_id": aid}, options.Delete())
+	if err != nil {
+		return errors.ErrorDatabaseFailedDelete
+	}
+
+	return nil
+}
+
 func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.APIError) {
 	var assign *MongoAssignment
 	res := a.col.FindOne(a.ctx, bson.M{"_id": aid}, options.FindOne())

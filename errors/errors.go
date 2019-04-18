@@ -38,6 +38,7 @@ var (
 	// ErrorFailedToCreateUser an error for when you fail to create a user.
 	ErrorDatabaseFailedCreate        = &Error{errors.New("DATABASE CREATE OPERATION FAILURE"), http.StatusInternalServerError}
 	ErrorDatabaseFailedUpdate        = &Error{errors.New("DATABASE UPDATE OPERATION FAILURE"), http.StatusInternalServerError}
+	ErrorDatabaseFailedDelete        = &Error{errors.New("DATABASE UPDATE OPERATION FAILURE"), http.StatusInternalServerError}
 	ErrorDatabaseFailedQuery         = &Error{errors.New("DATABASE QUERY OPERATION FAILURE"), http.StatusInternalServerError}
 	ErrorDatabaseFailedExtract       = &Error{errors.New("DATABASE EXTRACT DATA OPERATION FAILURE"), http.StatusInternalServerError}
 	ErrorCannotCreateDuplicateData   = &Error{errors.New("CANNOT CREATE DUPLICATE DATABASE ENTRY"), http.StatusConflict}

@@ -42,6 +42,8 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.CreateAssignmentFromFile, "course/:cid/assignment/create/file", tyrgin.POST),
 		tyrgin.NewRoute(cms.CreateCourse, "create/course", tyrgin.POST),
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", tyrgin.GET),
+		tyrgin.NewRoute(cms.DeleteAssignment, "course/:cid/assignment/:aid/delete/assignment", tyrgin.GET),
+		tyrgin.NewRoute(cms.DeleteCourse, "course/:cid/assignment/:aid/delete/course", tyrgin.GET),
 		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/assignment/:aid/submission/download/:sid/:num", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetAssignment, "course/:cid/assignment/:aid/details", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetCourse, "course/:cid", tyrgin.GET),
