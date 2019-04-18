@@ -38,7 +38,7 @@ type (
 		NumAttempts  int                `form:"numAttempts" binding:"required"`
 		Description  string             `form:"description" binding:"required"`
 		DueDate      primitive.DateTime `form:"dueDate" binding:"required"`
-		TestBuildCMD string             `form:"TestBuildCMD"`
+		TestBuildCMD string             `form:"testBuildCMD"`
 		Tests        []string           `form:"tests" binding:"required"`
 	}
 
