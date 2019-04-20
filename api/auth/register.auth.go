@@ -29,7 +29,7 @@ func Register(c *gin.Context) {
 	var register forms.UserRegisterForm
 	err := c.ShouldBindJSON(&register)
 	if err != nil {
-		c.Set("error", errors.ErrorInvlaidJSON)
+		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 

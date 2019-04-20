@@ -12,7 +12,7 @@ func CourseAddUser(c *gin.Context) {
 
 	var addUser forms.CourseAddUserForm
 	if err := c.ShouldBindJSON(&addUser); err != nil {
-		c.Set("error", errors.ErrorInvlaidJSON)
+		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 

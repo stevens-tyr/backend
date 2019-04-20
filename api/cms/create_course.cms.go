@@ -18,7 +18,7 @@ func CreateCourse(c *gin.Context) {
 
 	var createCourse forms.CreateCourseForm
 	if errs := c.ShouldBindJSON(&createCourse); errs != nil {
-		c.Set("error", errors.ErrorInvlaidJSON)
+		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 

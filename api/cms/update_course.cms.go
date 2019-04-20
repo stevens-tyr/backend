@@ -18,7 +18,7 @@ func UpdateCourse(c *gin.Context) {
 	var up map[string]interface{}
 	errs := c.ShouldBind(&up)
 	if errs != nil {
-		c.Set("error", errors.ErrorInvlaidJSON)
+		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 

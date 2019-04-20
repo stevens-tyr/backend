@@ -26,7 +26,7 @@ func CreateAssignment(c *gin.Context) {
 	var capre forms.CreateAssignmentPreForm
 	err := c.ShouldBind(&capre)
 	if err != nil {
-		c.Set("error", errors.ErrorInvlaidJSON)
+		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 	versionCheck(&capre)

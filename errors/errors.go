@@ -45,7 +45,7 @@ var (
 	ErrorHashFailure                 = &Error{errors.New("FAILED TO HASH CONTENT"), http.StatusInternalServerError}
 	ErrorUserAlreadyEnrolled         = &Error{errors.New("USER ALREADY ENROLLED IN COURSE"), http.StatusConflict}
 	ErrorInvalidObjectID             = &Error{errors.New("INVALID OBJECT ID"), http.StatusBadRequest}
-	ErrorInvlaidJSON                 = &Error{errors.New("INVALID JSON"), http.StatusBadRequest}
+	ErrorInvalidJSON                 = &Error{errors.New("INVALID JSON"), http.StatusBadRequest}
 	ErrorInvlaidBSON                 = &Error{errors.New("INVALID BSON OBJECT DECODED"), http.StatusInternalServerError}
 	ErrorGenerateTokenFailure        = &Error{errors.New("GENERATE TOKEN FAILURE"), http.StatusInternalServerError}
 	ErrorGridFSUploadFailure         = &Error{errors.New("GRIDFS UPLOAD FAILURE"), http.StatusInternalServerError}
