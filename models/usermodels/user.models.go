@@ -90,6 +90,24 @@ func (u *UserInterface) FindOneById(uid interface{}) (*MongoUser, errors.APIErro
 	return user, nil
 }
 
+func (u *UserInterface) RemoveCourseFromUsers(cid interface{}) errors.APIError {
+	_, err := u.col.UpdateMany(
+		u.ctx,
+		bson.M{
+			"enrolledCourses": bson.M{"$elemMatch": bson.M{"courseID": cid}},
+		},
+		bson.M{
+			"$pull": bson.M{
+				"enrolledCourses": bson.M{"courseID": cid},
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+	return nil
+}
+
 func (u *UserInterface) Login(form forms.UserLoginForm) (interface{}, errors.APIError) {
 	user, err := u.FindOne(form.Email)
 	if err != nil {

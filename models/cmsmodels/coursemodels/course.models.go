@@ -91,6 +91,25 @@ func (c *CourseInterface) Delete(cid interface{}) errors.APIError {
 	return nil
 }
 
+func (c *CourseInterface) RemoveAssignment(aid, cid interface{}) (errors.APIError) {
+	_, err := c.col.UpdateOne(
+		c.ctx,
+		bson.M{
+			"_id": cid,
+		},
+		bson.M{
+			"$pull": bson.M{
+				"assignments": aid,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+	
+	return nil
+}
+
 func (c *CourseInterface) Update(course MongoCourse) (errors.APIError) {
 	_, err := c.col.UpdateOne(
 		c.ctx,

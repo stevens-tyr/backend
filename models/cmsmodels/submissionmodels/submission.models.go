@@ -112,6 +112,15 @@ func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmi
 	return submissions, nil
 }
 
+func (s *SubmissionInterface) DeleteByAssignmentID(aid interface{}) errors.APIError {
+	_, err := s.col.DeleteMany(s.ctx, bson.M{"assignmentID": aid}, options.Delete())
+	if err != nil {
+		return errors.ErrorDatabaseFailedDelete
+	}
+
+	return nil
+}
+
 // GetUsersRecentSubmissions grabs the most recent submissions up until limit
 func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit int64) ([]map[string]interface{}, errors.APIError) {
 	query := []interface{}{
