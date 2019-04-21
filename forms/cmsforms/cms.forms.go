@@ -87,15 +87,15 @@ type (
 	}
 
 	UpdateAssignment struct {
-		Language *string `json: "language"`
-		Version *string `json: "version"`
-		Name *string `json: "name"`
-		Description *string `json: "description"`
-		DueDate *primitive.DateTime `json: "dueDate"`
-		Published *bool `json: "published"`
-		TestBuildCMD *string `json: "testBuildCMD"`
-		Tests *[]string `json: "tests"`
-		NumAttempts *int `json: "numAttempts"`
+		Language *string `form: "language"`
+		Version *string `form: "version"`
+		Name *string `form: "name"`
+		Description *string `form: "description"`
+		DueDate *primitive.DateTime `form: "dueDate"`
+		Published *bool `form: "published"`
+		TestBuildCMD *string `form: "testBuildCMD"`
+		Tests *[]string `form: "tests"`
+		NumAttempts *int `form: "numAttempts"`
 	}
 	
 	UpdateCourse struct {

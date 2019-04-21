@@ -1,13 +1,17 @@
 package cms
 
 import (
+	"bytes"
 	"encoding/json"
+	"net/http"
 	
 	"github.com/gin-gonic/gin"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"backend/errors"
 	"backend/models/cmsmodels/assignmentmodels"
 	"backend/forms"
+	"backend/utils"
 )
 
 func UpdateAssignment(c *gin.Context) {
@@ -23,6 +27,18 @@ func UpdateAssignment(c *gin.Context) {
 	errs := c.ShouldBind(&up)
 	if errs != nil {
 		c.Set("error", errors.ErrorInvalidJSON)
+		return
+	}
+
+	sf, errs := c.FormFile("supportingFiles")
+	if errs != nil && errs != http.ErrMissingFile {
+		c.Set("error", errors.ErrorUploadingFile)
+		return
+	}
+
+	supportingFiles, err := utils.CheckFileType(sf)
+	if err != nil {
+		c.Set("error", err)
 		return
 	}
 
@@ -58,6 +74,25 @@ func UpdateAssignment(c *gin.Context) {
 	}
 	if up.NumAttempts != nil {
 		assign.NumAttempts = *up.NumAttempts
+	}
+	
+	sfID, errs := primitive.ObjectIDFromHex(assign.SupportingFiles)
+	if errs != nil {
+		c.Set("error", errors.ErrorInvalidObjectID)
+		return
+	}
+	
+	err = gfs.Delete(sfID)
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+	
+	err = gfs.Upload(aid, &sfID, assign.Name, bytes.NewReader(supportingFiles))
+	if err != nil {
+		c.Set("error", err)
+		am.Delete(aid)
+		return
 	}
 
 	err = am.Update(*assign)

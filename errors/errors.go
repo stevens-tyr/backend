@@ -49,6 +49,7 @@ var (
 	ErrorInvlaidBSON                 = &Error{errors.New("INVALID BSON OBJECT DECODED"), http.StatusInternalServerError}
 	ErrorGenerateTokenFailure        = &Error{errors.New("GENERATE TOKEN FAILURE"), http.StatusInternalServerError}
 	ErrorGridFSUploadFailure         = &Error{errors.New("GRIDFS UPLOAD FAILURE"), http.StatusInternalServerError}
+	ErrorGridFSDeleteFailure         = &Error{errors.New("GRIDFS DELETE FAILURE"), http.StatusInternalServerError}
 	ErrorGridFSDownloadFailure       = &Error{errors.New("GRIDFS DOWNLOAD FAILURE"), http.StatusInternalServerError}
 	ErrorUploadingFile               = &Error{errors.New("PROBLEM UPLOADING FILE"), http.StatusInternalServerError}
 	ErrorUnsupportedFileType         = &Error{errors.New("UNSUPPORTED FILE TYPE"), http.StatusUnsupportedMediaType}

@@ -48,6 +48,15 @@ func (g *GridFSInterface) Upload(fileID interface{}, id *primitive.ObjectID, fil
   return nil
 }
 
+func (g *GridFSInterface) Delete(fileID interface{}) errors.APIError {
+	err := g.bucket.GridFSDeleteFile(fileID.(primitive.ObjectID))
+	if err != nil {
+		return errors.ErrorGridFSDeleteFailure
+	}
+
+	return nil
+}
+
 func (g *GridFSInterface) Download(fileID interface{}) (*bytes.Reader, int64, errors.APIError) {
   file, err := g.bucket.GridFSDownloadFile(fileID.(primitive.ObjectID))
   if err != nil {
