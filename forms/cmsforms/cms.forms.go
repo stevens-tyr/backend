@@ -87,29 +87,29 @@ type (
 	}
 
 	UpdateAssignment struct {
-		Language *string `bson: "language"`
-		Version *string `bson: "version"`
-		Name *string `bson: "name"`
-		Description *string `bson: "description"`
-		DueDate *primitive.DateTime `bson: "dueDate"`
-		Published *bool `bson: "published"`
-		TestBuildCMD *string `bson: "testBuildCMD"`
-		Tests *[]string `bson: "tests"`
-		NumAttempts *int `bson: "numAttempts"`
+		Language *string `json: "language"`
+		Version *string `json: "version"`
+		Name *string `json: "name"`
+		Description *string `json: "description"`
+		DueDate *primitive.DateTime `json: "dueDate"`
+		Published *bool `json: "published"`
+		TestBuildCMD *string `json: "testBuildCMD"`
+		Tests *[]string `json: "tests"`
+		NumAttempts *int `json: "numAttempts"`
 	}
 	
 	UpdateCourse struct {
-		Department *string `bson: "department"`
-		LongName *string `bson: "longName"`
-		Number *int `bson: number`
-		Section *string `bson: "section"`
-		Semester *string `bson: "semester"`
+		Department *string `json: "department"`
+		LongName *string `json: "longName"`
+		Number *int `json: number`
+		Section *string `json: "section"`
+		Semester *string `json: "semester"`
 	}
 	
 	UpdateSubmissionGrade struct {
-		StudentFacingPass *int `bson: "studentFacingPass"`
-		StudentFacingFail *int `bson: "studentFacingFail"`
-		AdminFacingPass *int `bson: "adminFacingPass"`
-		AdminFacingFail *int `bson: "adminFacingFail"`
+		StudentFacingPass *int `json: "studentFacingPass"`
+		StudentFacingFail *int `json: "studentFacingFail"`
+		AdminFacingPass *int `json: "adminFacingPass"`
+		AdminFacingFail *int `json: "adminFacingFail"`
 	}
 )
