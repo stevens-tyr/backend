@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"backend/errors"
+	"backend/forms"
 )
 
 func UpdateCourse(c *gin.Context) {
@@ -15,29 +16,29 @@ func UpdateCourse(c *gin.Context) {
 		return
 	}
 
-	var up map[string]interface{}
+	var up forms.UpdateCourseForm
 	errs := c.ShouldBind(&up)
 	if errs != nil {
 		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 
-	if val, ok := up["department"]; ok {
-		course.Department = val.(string)
+	if up.Department != nil {
+		course.Department = *up.Department
 	}
-	if val, ok := up["longName"]; ok {
-		course.LongName = val.(string)
+	if up.LongName != nil {
+		course.LongName = *up.LongName
 	}
-	if val, ok := up["number"]; ok {
-		course.Number = val.(int)
+	if up.Number != nil {
+		course.Number = *up.Number
 	}
-	if val, ok := up["section"]; ok {
-		course.Section = val.(string)
+	if up.Section != nil {
+		course.Section = *up.Section
 	}
-	if val, ok := up["semester"]; ok {
-		course.Semester = val.(string)
+	if up.Semester != nil {
+		course.Semester = *up.Semester
 	}
-
+	
 	err = cm.Update(*course)
 	if err != nil {
 		c.Set("error", err)

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"backend/errors"
+	"backend/forms"
 )
 
 func UpdateGrade(c *gin.Context) {
@@ -15,24 +16,24 @@ func UpdateGrade(c *gin.Context) {
 		return
 	}
 	
-	var up map[string]interface{}
+	var up forms.UpdateSubmissionGradeForm
 	errs := c.ShouldBind(&up)
 	if errs != nil {
 		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
-	
-	if val, ok := up["studentFacingPass"]; ok {
-		sub.Cases.StudentFacing.Pass = val.(int)
+
+	if up.StudentFacingPass != nil {
+		sub.Cases.StudentFacing.Pass = *up.StudentFacingPass
 	}
-	if val, ok := up["studentFacingFail"]; ok {
-		sub.Cases.StudentFacing.Fail = val.(int)
+	if up.StudentFacingFail != nil {
+		sub.Cases.StudentFacing.Fail = *up.StudentFacingFail
 	}
-	if val, ok := up["adminFacingPass"]; ok {
-		sub.Cases.AdminFacing.Pass = val.(int)
+	if up.AdminFacingPass != nil {
+		sub.Cases.AdminFacing.Pass = *up.AdminFacingPass
 	}
-	if val, ok := up["adminFacingFail"]; ok {
-		sub.Cases.AdminFacing.Fail = val.(int)
+	if up.AdminFacingFail != nil {
+		sub.Cases.AdminFacing.Fail = *up.AdminFacingFail
 	}
 	
 	err = sm.UpdateGrade(

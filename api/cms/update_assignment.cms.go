@@ -1,11 +1,13 @@
 package cms
 
 import (
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
+	"encoding/json"
+	
 	"github.com/gin-gonic/gin"
 
 	"backend/errors"
 	"backend/models/cmsmodels/assignmentmodels"
+	"backend/forms"
 )
 
 func UpdateAssignment(c *gin.Context) {
@@ -17,39 +19,45 @@ func UpdateAssignment(c *gin.Context) {
 		return
 	}
 
-	var up map[string]interface{}
+	var up forms.UpdateAssignmentForm
 	errs := c.ShouldBind(&up)
 	if errs != nil {
 		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
 
-	if val, ok := up["language"]; ok {
-		assign.Language = val.(string)
+	if up.Language != nil {
+		assign.Language = *up.Language
 	}
-	if val, ok := up["version"]; ok {
-		assign.Version = val.(string)
+	if up.Version != nil {
+		assign.Version = *up.Version
 	}
-	if val, ok := up["name"]; ok {
-		assign.Name = val.(string)
+	if up.Name != nil {
+		assign.Name = *up.Name
 	}
-	if val, ok := up["description"]; ok {
-		assign.Description = val.(string)
+	if up.Description != nil {
+		assign.Description = *up.Description
 	}
-	if val, ok := up["dueDate"]; ok {
-		assign.DueDate = val.(primitive.DateTime)
+	if up.DueDate != nil {
+		assign.DueDate = *up.DueDate
 	}
-	if val, ok := up["published"]; ok {
-		assign.Published = val.(bool)
+	if up.Published != nil {
+		assign.Published = *up.Published
 	}
-	if val, ok := up["testBuildCMD"]; ok {
-		assign.TestBuildCMD = val.(string)
+	if up.TestBuildCMD != nil {
+		assign.TestBuildCMD = *up.TestBuildCMD
 	}
-	if val, ok := up["tests"]; ok {
-		assign.Tests = val.([]assignmentmodels.Test)
+	if up.Tests != nil {
+		var tests []assignmentmodels.Test
+		for _, test := range *up.Tests {
+			var toAdd assignmentmodels.Test
+			json.Unmarshal([]byte(test), &toAdd)
+			tests = append(tests, toAdd)
+		}
+		assign.Tests = tests
 	}
-	if val, ok := up["numAttempts"]; ok {
-		assign.NumAttempts = val.(int)
+	if up.NumAttempts != nil {
+		assign.NumAttempts = *up.NumAttempts
 	}
 
 	err = am.Update(*assign)

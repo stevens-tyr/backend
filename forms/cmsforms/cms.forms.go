@@ -85,4 +85,31 @@ type (
 	GradeAgg struct {
 		Students []student `bson:"students"`
 	}
+
+	UpdateAssignment struct {
+		Language *string `bson: "language"`
+		Version *string `bson: "version"`
+		Name *string `bson: "name"`
+		Description *string `bson: "description"`
+		DueDate *primitive.DateTime `bson: "dueDate"`
+		Published *bool `bson: "published"`
+		TestBuildCMD *string `bson: "testBuildCMD"`
+		Tests *[]string `bson: "tests"`
+		NumAttempts *int `bson: "numAttempts"`
+	}
+	
+	UpdateCourse struct {
+		Department *string `bson: "department"`
+		LongName *string `bson: "longName"`
+		Number *int `bson: number`
+		Section *string `bson: "section"`
+		Semester *string `bson: "semester"`
+	}
+	
+	UpdateSubmissionGrade struct {
+		StudentFacingPass *int `bson: "studentFacingPass"`
+		StudentFacingFail *int `bson: "studentFacingFail"`
+		AdminFacingPass *int `bson: "adminFacingPass"`
+		AdminFacingFail *int `bson: "adminFacingFail"`
+	}
 )
