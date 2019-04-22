@@ -8,16 +8,16 @@ import (
 type (
 	AssignmentAggQuery cmsf.AssignmentAgg
 
-	CourseAggQuery cmsf.CourseAgg
-	CourseAddUserForm cmsf.CourseAddUser
+	CourseAggQuery        cmsf.CourseAgg
+	CourseAddUserForm     cmsf.CourseAddUser
 	CourseBulkAddUserForm cmsf.CourseBulkAddUser
 
-	CreateAssignmentPreForm cmsf.CreateAssignmentPreParse
+	CreateAssignmentPreForm  cmsf.CreateAssignmentPreParse
 	CreateAssignmentPostForm cmsf.CreateAssignmentPostParse
-	CreateCourseForm cmsf.CreateCourse
+	CreateCourseForm         cmsf.CreateCourse
 
 	GradeAggQuery cmsf.GradeAgg
-	
-	UserLoginForm uf.LoginForm
+
+	UserLoginForm    uf.LoginForm
 	UserRegisterForm uf.RegisterForm
 )
