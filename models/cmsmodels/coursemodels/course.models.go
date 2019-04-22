@@ -3,9 +3,9 @@ package coursemodels
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"os"
 	"strconv"
-	"encoding/csv"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
@@ -22,7 +22,7 @@ import (
 type MongoCourse struct {
 	ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id" binding:"required"`
 	Department  string               `bson:"department" json:"department" binding:"required"`
-	LongName  string               `bson:"longName" json:"longName" binding:"required"`
+	LongName    string               `bson:"longName" json:"longName" binding:"required"`
 	Number      int                  `bson:"number" json:"number" binding:"required"`
 	Section     string               `bson:"section" json:"section" binding:"required"`
 	Semester    string               `bson:"semester" json:"semester" binding:"required"`
@@ -91,7 +91,7 @@ func (c *CourseInterface) Delete(cid interface{}) errors.APIError {
 	return nil
 }
 
-func (c *CourseInterface) Update(course MongoCourse) (errors.APIError) {
+func (c *CourseInterface) Update(course MongoCourse) errors.APIError {
 	_, err := c.col.UpdateOne(
 		c.ctx,
 		bson.M{
@@ -100,16 +100,16 @@ func (c *CourseInterface) Update(course MongoCourse) (errors.APIError) {
 		bson.M{
 			"$set": bson.M{
 				"department": course.Department,
-				"longName": course.LongName,
-				"section": course.Section,
-				"semester": course.Semester,
+				"longName":   course.LongName,
+				"section":    course.Section,
+				"semester":   course.Semester,
 			},
 		},
 	)
 	if err != nil {
 		return errors.ErrorDatabaseFailedUpdate
 	}
-	
+
 	return nil
 }
 
@@ -118,10 +118,10 @@ func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]int
 		return bson.M{
 			"$lookup": bson.M{
 				"from": "users",
-				"let": bson.M{ "userType": "$" + userType },
+				"let":  bson.M{"userType": "$" + userType},
 				"pipeline": bson.A{
-					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$_id", "$$userType"}, } } },
-					bson.M{ "$project": bson.M{ "admin": 0, "enrolledCourses": 0, "password": 0 } },
+					bson.M{"$match": bson.M{"$expr": bson.M{"$in": bson.A{"$_id", "$$userType"}}}},
+					bson.M{"$project": bson.M{"admin": 0, "enrolledCourses": 0, "password": 0}},
 				},
 				"as": userType,
 			},
@@ -139,30 +139,40 @@ func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]int
 		query = append(query, bson.M{
 			"$lookup": bson.M{
 				"from": "assignments",
-				"let": bson.M{ "ass": "$assignments" },
+				"let":  bson.M{"ass": "$assignments"},
 				"pipeline": bson.A{
 					bson.M{
 						"$match": bson.M{
-							"$expr": bson.M{ "$and": bson.A{bson.M{ "$in": bson.A{"$_id", "$$ass"} }, "$published"} },
+							"$expr": bson.M{"$and": bson.A{bson.M{"$in": bson.A{"$_id", "$$ass"}}, "$published"}},
 						},
 					},
 					bson.M{
 						"$lookup": bson.M{
 							"from": "submissions",
-							"let": bson.M{ "assID": "$_id" },
+							"let":  bson.M{"assID": "$_id"},
 							"pipeline": bson.A{
 								bson.M{
 									"$match": bson.M{
 										"$expr": bson.M{
 											"$and": bson.A{
-												bson.M{ "$eq": bson.A{"$userID", uid} },
-												bson.M{ "$eq": bson.A{"$$assID", "$assignmentID"} },
+												bson.M{"$eq": bson.A{"$userID", uid}},
+												bson.M{"$eq": bson.A{"$$assID", "$assignmentID"}},
 											},
 										},
 									},
 								},
-								bson.M{ "$sort": bson.M{ "submissionDate": -1 } },
-								bson.M{ "$project": bson.M{ "cases.adminFacing": 0 } },
+								bson.M{
+									"$project": bson.M{
+										"assignmentID":   1,
+										"submissionDate": 1,
+										"file":           1,
+										"errorTesting":   1,
+										"results":        bson.M{"$filter": bson.M{"input": "$results", "as": "result", "cond": bson.M{"$eq": bson.A{"$$result.studentFacing", true}}}},
+										"attemptNumber":  1,
+										"inProgress":     1,
+									},
+								},
+								bson.M{"$sort": bson.M{"submissionDate": -1}},
 							},
 							"as": "submissions",
 						},
@@ -175,15 +185,15 @@ func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]int
 		query = append(query, bson.M{
 			"$lookup": bson.M{
 				"from": "assignments",
-				"let": bson.M{ "ass": "$assignments" },
+				"let":  bson.M{"ass": "$assignments"},
 				"pipeline": bson.A{
-					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$_id", "$$ass"} } } },
+					bson.M{"$match": bson.M{"$expr": bson.M{"$in": bson.A{"$_id", "$$ass"}}}},
 					bson.M{
 						"$lookup": bson.M{
-							"from": "submissions",
-							"localField": "submissions.submissionID",
+							"from":         "submissions",
+							"localField":   "submissions.submissionID",
 							"foreignField": "_id",
-							"as": "submissions",
+							"as":           "submissions",
 						},
 					},
 				},
@@ -191,7 +201,6 @@ func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]int
 			},
 		})
 	}
-
 
 	var course map[string]interface{}
 	cur, err := c.col.Aggregate(
@@ -373,19 +382,19 @@ func (c *CourseInterface) GetAssignments(cid interface{}, role string) ([]forms.
 	return assignments, nil
 }
 
-func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, string, int64, errors.APIError){
+func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, string, int64, errors.APIError) {
 	userLookup := func(userType string) bson.M {
 		return bson.M{
 			"$lookup": bson.M{
 				"from": "users",
-				"let": bson.M{ "userType": "$" + userType },
+				"let":  bson.M{"userType": "$" + userType},
 				"pipeline": bson.A{
-					bson.M{ "$match": bson.M{ "$expr": bson.M{ "$in": bson.A{"$_id", "$$userType"}, } } },
-					bson.M{ "$project": bson.M{ "admin": 0, "email": 0, "enrolledCourses": 0, "password": 0 }},
+					bson.M{"$match": bson.M{"$expr": bson.M{"$in": bson.A{"$_id", "$$userType"}}}},
+					bson.M{"$project": bson.M{"admin": 0, "email": 0, "enrolledCourses": 0, "password": 0}},
 					bson.M{
 						"$lookup": bson.M{
 							"from": "submissions",
-							"let": bson.M{"uid": "$_id"},
+							"let":  bson.M{"uid": "$_id"},
 							"pipeline": bson.A{
 								bson.M{
 									"$match": bson.M{
@@ -397,9 +406,9 @@ func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, s
 										},
 									},
 								},
-								bson.M{ "$sort": bson.M{ "submissionDate": -1} },
-								bson.M{ "$project": bson.M{ "_id": 0, "assignmentID": 0, "userID": 0, "file": 0 }},
-								bson.M{ "$limit": 1},
+								bson.M{"$sort": bson.M{"submissionDate": -1}},
+								bson.M{"$project": bson.M{"_id": 0, "assignmentID": 0, "userID": 0, "file": 0}},
+								bson.M{"$limit": 1},
 							},
 							"as": "submissions",
 						},
@@ -409,21 +418,21 @@ func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, s
 			},
 		}
 	}
-	
+
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": cid}},
 		userLookup("students"),
 		bson.M{
 			"$project": bson.M{
-				"_id": 0,
+				"_id":         0,
 				"assignments": 0,
-				"assistants": 0,
-				"department": 0,
-				"longName": 0,
-				"number": 0,
-				"professors": 0,
-				"section": 0,
-				"semester": 0,
+				"assistants":  0,
+				"department":  0,
+				"longName":    0,
+				"number":      0,
+				"professors":  0,
+				"section":     0,
+				"semester":    0,
 			},
 		},
 	}
@@ -437,7 +446,7 @@ func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, s
 	if err != nil {
 		return nil, "", 0, errors.ErrorInvlaidBSON
 	}
-	
+
 	for cur.Next(c.ctx) {
 		err = cur.Decode(&results)
 		if err != nil {
@@ -469,6 +478,6 @@ func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, s
 		return nil, "", 0, errors.ErrorFailedToWriteCSV
 	}
 	writer.Flush()
-	
+
 	return csvBytes, "filename", int64(csvBytes.Len()), nil
 }

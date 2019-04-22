@@ -2,6 +2,7 @@ package submissionmodels
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -157,7 +158,7 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 				"submissionDate": 1,
 				"file":           1,
 				"errorTesting":   1,
-				"results":        1,
+				"results":        bson.M{"$filter": bson.M{"input": "$results", "as": "result", "cond": bson.M{"$eq": bson.A{"$$result.studentFacing", true}}}},
 				"attemptNumber":  1,
 				"inProgress":     1,
 				"assignment":     bson.M{"$arrayElemAt": bson.A{"$assignment", 0}},
@@ -165,6 +166,8 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 		},
 		bson.M{"$sort": bson.M{"submissionDate": -1}},
 		bson.M{"$limit": limit},
+		bson.M{"$match": bson.M{
+			"$expr": bson.M{"$eq": bson.A{"$assignment.published", true}}}},
 	}
 
 	var recentSubmissions []map[string]interface{}
@@ -174,6 +177,7 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 		options.Aggregate(),
 	)
 	if err != nil {
+		fmt.Println(err)
 		return nil, errors.ErrorInvlaidBSON
 	}
 
