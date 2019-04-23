@@ -91,7 +91,7 @@ func (c *CourseInterface) Delete(cid interface{}) errors.APIError {
 	return nil
 }
 
-func (c *CourseInterface) RemoveAssignment(aid, cid interface{}) (errors.APIError) {
+func (c *CourseInterface) RemoveAssignment(aid, cid interface{}) errors.APIError {
 	_, err := c.col.UpdateOne(
 		c.ctx,
 		bson.M{
@@ -106,7 +106,7 @@ func (c *CourseInterface) RemoveAssignment(aid, cid interface{}) (errors.APIErro
 	if err != nil {
 		return errors.ErrorDatabaseFailedUpdate
 	}
-	
+
 	return nil
 }
 

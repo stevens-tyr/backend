@@ -237,7 +237,7 @@ func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, fil
 		return errors.ErrorDatabaseFailedCreate
 	}
 
-	// call gradey boi here and the update document
+	// TODO API Call to court herald
 
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Update Grade will be called by court_herald to update the grade from brian
 func UpdateGrade(c *gin.Context) {
 	sid, _ := c.Get("sid")
 
@@ -14,10 +15,7 @@ func UpdateGrade(c *gin.Context) {
 	c.BindJSON(&testResults)
 	fmt.Println(testResults[0])
 
-	err := sm.UpdateGrade(
-		sid,
-		testResults,
-	)
+	err := sm.UpdateGrade(sid, testResults)
 	if err != nil {
 		c.Set("error", err)
 		return
