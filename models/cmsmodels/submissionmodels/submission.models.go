@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
@@ -223,13 +224,15 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 
 func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, filename string) errors.APIError {
 	submission := MongoSubmission{
-		ID:            sid.(primitive.ObjectID),
-		UserID:        uid.(primitive.ObjectID),
-		AttemptNumber: attempt,
-		File:          filename,
-		ErrorTesting:  false,
-		Results:       nil,
-		InProgress:    true,
+		ID:             sid.(primitive.ObjectID),
+		UserID:         uid.(primitive.ObjectID),
+		AssignmentID:   aid.(primitive.ObjectID),
+		AttemptNumber:  attempt,
+		SubmissionDate: primitive.DateTime(time.Now().UnixNano() / 1000000),
+		File:           filename,
+		ErrorTesting:   false,
+		Results:        nil,
+		InProgress:     true,
 	}
 
 	_, err := s.col.InsertOne(s.ctx, &submission, options.InsertOne())
