@@ -44,14 +44,14 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", tyrgin.GET),
 		tyrgin.NewRoute(cms.DeleteAssignment, "course/:cid/assignment/:aid/delete", tyrgin.DELETE),
 		tyrgin.NewRoute(cms.DeleteCourse, "course/:cid/delete", tyrgin.DELETE),
-		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/assignment/:aid/submission/download/:sid/:num", tyrgin.GET),
+		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/assignment/:aid/submission/:sid/:num", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetAssignment, "course/:cid/assignment/:aid/details", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetCourse, "course/:cid", tyrgin.GET),
 		tyrgin.NewRoute(cms.GradesAsCSV, "course/:cid/assignment/:aid/csv", tyrgin.GET),
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/assignment/submit/:aid", tyrgin.POST),
 		tyrgin.NewRoute(cms.UpdateAssignment, "course/:cid/assignment/:aid/update", tyrgin.PATCH),
 		tyrgin.NewRoute(cms.UpdateCourse, "course/:cid/update", tyrgin.PATCH),
-		tyrgin.NewRoute(cms.UpdateGrade, "course/:cid/submission/:sid/update", tyrgin.PATCH),
+		tyrgin.NewRoute(cms.UpdateGrade, "course/:cid/assignment/:aid/submission/:sid/update", tyrgin.PATCH),
 	}
 
 	var cmsEndpoints = []tyrgin.APIAction{
