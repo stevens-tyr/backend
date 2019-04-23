@@ -3,14 +3,15 @@ package cms
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	
+
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"backend/errors"
-	"backend/models/cmsmodels/assignmentmodels"
 	"backend/forms"
+	"backend/models/cmsmodels/assignmentmodels"
 	"backend/utils"
 )
 
@@ -26,6 +27,7 @@ func UpdateAssignment(c *gin.Context) {
 	var up forms.UpdateAssignmentForm
 	errs := c.ShouldBind(&up)
 	if errs != nil {
+		fmt.Println("ERROR:", errs)
 		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}
@@ -36,10 +38,31 @@ func UpdateAssignment(c *gin.Context) {
 		return
 	}
 
-	supportingFiles, err := utils.CheckFileType(sf)
-	if err != nil {
-		c.Set("error", err)
-		return
+	if sf != nil {
+		supportingFiles, err := utils.CheckFileType(sf)
+		if err != nil {
+			c.Set("error", err)
+			return
+		}
+
+		sfID, errs := primitive.ObjectIDFromHex(assign.SupportingFiles)
+		if errs != nil {
+			c.Set("error", errors.ErrorInvalidObjectID)
+			return
+		}
+
+		err = gfs.Delete(sfID)
+		if err != nil {
+			c.Set("error", err)
+			return
+		}
+
+		err = gfs.Upload(aid, &sfID, assign.Name, bytes.NewReader(supportingFiles))
+		if err != nil {
+			c.Set("error", err)
+			am.Delete(aid)
+			return
+		}
 	}
 
 	if up.Language != nil {
@@ -63,9 +86,9 @@ func UpdateAssignment(c *gin.Context) {
 	if up.TestBuildCMD != nil {
 		assign.TestBuildCMD = *up.TestBuildCMD
 	}
-	if up.Tests != nil {
+	if len(up.Tests) > 0 {
 		var tests []assignmentmodels.Test
-		for _, test := range *up.Tests {
+		for _, test := range up.Tests {
 			var toAdd assignmentmodels.Test
 			json.Unmarshal([]byte(test), &toAdd)
 			tests = append(tests, toAdd)
@@ -75,32 +98,13 @@ func UpdateAssignment(c *gin.Context) {
 	if up.NumAttempts != nil {
 		assign.NumAttempts = *up.NumAttempts
 	}
-	
-	sfID, errs := primitive.ObjectIDFromHex(assign.SupportingFiles)
-	if errs != nil {
-		c.Set("error", errors.ErrorInvalidObjectID)
-		return
-	}
-	
-	err = gfs.Delete(sfID)
+
+	err = am.Update(*assign)
 	if err != nil {
 		c.Set("error", err)
-		return
-	}
-	
-	err = gfs.Upload(aid, &sfID, assign.Name, bytes.NewReader(supportingFiles))
-	if err != nil {
-		c.Set("error", err)
-		am.Delete(aid)
 		return
 	}
 
-	err = am.Update(*assign)
-	if err != nil{
-		c.Set("error", err)
-		return
-	}
-	
 	c.JSON(200, gin.H{
 		"message": "Assignment Updated.",
 	})

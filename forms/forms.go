@@ -22,6 +22,5 @@ type (
 	UserRegisterForm uf.RegisterForm
 
 	UpdateAssignmentForm cmsf.UpdateAssignment
-	UpdateCourseForm cmsf.UpdateCourse
-	UpdateSubmissionGradeForm cmsf.UpdateSubmissionGrade
+	UpdateCourseForm     cmsf.UpdateCourse
 )
