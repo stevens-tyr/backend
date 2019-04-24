@@ -38,7 +38,7 @@ func UpdateCourse(c *gin.Context) {
 	if up.Semester != nil {
 		course.Semester = *up.Semester
 	}
-	
+
 	err = cm.Update(*course)
 	if err != nil {
 		c.Set("error", err)

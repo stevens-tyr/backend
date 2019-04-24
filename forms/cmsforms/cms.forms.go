@@ -71,7 +71,7 @@ type (
 	}
 
 	sub struct {
-		Time    primitive.DateTime `form:"submissionTime""`
+		Time    primitive.DateTime `form:"submissionTime"`
 		Attempt int                `bson:"attemptNumber"`
 	}
 
@@ -87,29 +87,22 @@ type (
 	}
 
 	UpdateAssignment struct {
-		Language *string `form: "language"`
-		Version *string `form: "version"`
-		Name *string `form: "name"`
-		Description *string `form: "description"`
-		DueDate *primitive.DateTime `form: "dueDate"`
-		Published *bool `form: "published"`
-		TestBuildCMD *string `form: "testBuildCMD"`
-		Tests *[]string `form: "tests"`
-		NumAttempts *int `form: "numAttempts"`
+		Language     *string             `form:"language"`
+		Version      *string             `form:"version"`
+		Name         *string             `form:"name"`
+		Description  *string             `form:"description"`
+		DueDate      *primitive.DateTime `form:"dueDate"`
+		Published    *bool               `form:"published"`
+		TestBuildCMD *string             `form:"testBuildCMD"`
+		Tests        []string            `form:"tests"`
+		NumAttempts  *int                `form:"numAttempts"`
 	}
-	
+
 	UpdateCourse struct {
-		Department *string `json: "department"`
-		LongName *string `json: "longName"`
-		Number *int `json: number`
-		Section *string `json: "section"`
-		Semester *string `json: "semester"`
-	}
-	
-	UpdateSubmissionGrade struct {
-		StudentFacingPass *int `json: "studentFacingPass"`
-		StudentFacingFail *int `json: "studentFacingFail"`
-		AdminFacingPass *int `json: "adminFacingPass"`
-		AdminFacingFail *int `json: "adminFacingFail"`
+		Department *string `json:"department"`
+		LongName   *string `json:"longName"`
+		Number     *int    `json:"number"`
+		Section    *string `json:"section"`
+		Semester   *string `json:"semester"`
 	}
 )

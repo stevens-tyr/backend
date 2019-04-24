@@ -4,17 +4,12 @@ import (
 	"bytes"
 	"fmt"
 
-	// "net/http"
-	"os"
-	"strconv"
-
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
+	"backend/errors"
 	"backend/utils"
-
-	"github.com/stevens-tyr/tyr-gin"
 )
 
 // SubmitAssignment will submit and grade the submission. Also updates the assignment.
@@ -34,42 +29,28 @@ func SubmitAssignment(c *gin.Context) {
 	// Upload
 	claims := jwt.ExtractClaims(c)
 
-	fdb, err := tyrgin.GetMongoDB(os.Getenv("GRIDFS_DB_NAME"))
-	if err != nil {
-		c.Set("error", err)
-		return
-	}
-
-	bucketSize, err := strconv.Atoi(os.Getenv("UPLOAD_SIZE"))
-	if err != nil {
-		c.Set("error", err)
-		return
-	}
-
-	bucket, err := tyrgin.GetGridFSBucket(fdb, "fs", int32(bucketSize))
-	if err != nil {
-		c.Set("error", err)
-		return
-	}
-
 	sid := primitive.NewObjectID()
-	submittedFilesName := fmt.Sprintf("name%s%s%s%s.tar.gz", c.Param("cid"), c.Param("aid"), claims["uid"], sid.Hex())
+	fid := primitive.NewObjectID()
+	submittedFilesName := fmt.Sprintf("sub-%s-%s.tar.gz", c.Param("aid"), claims["uid"])
 	reader := bytes.NewReader(submissionFiles)
-	err = bucket.GridFSUploadFile(sid, submittedFilesName, reader)
+	err = gfs.Upload(&fid, submittedFilesName, reader)
 	if err != nil {
 		c.Set("error", err)
 		return
 	}
 
 	uid, _ := c.Get("uid")
-
-	// See if previous submission exists
-	//cid := c.Param("cid")
 	aid, _ := c.Get("aid")
 
-	_, attempt, err := am.LatestUserSubmission(aid, uid)
+	// See if previous submission exists
+	assign, attempt, err := am.LatestUserSubmission(aid, uid)
 	if err != nil {
 		c.Set("error", err)
+		return
+	}
+
+	if attempt+1 > assign.NumAttempts {
+		c.Set("error", errors.ErrorSubmissionAttemptsExceeded)
 		return
 	}
 
@@ -79,15 +60,16 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	err = sm.Submit(aid, uid, sid, attempt+1, submittedFilesName)
+	job, err := sm.Submit(aid, fid, uid, sid, attempt+1, submittedFilesName, assign.Tests)
 	if err != nil {
+		am.DeleteSubmission(aid, sid)
 		c.Set("error", err)
 		return
 	}
 
 	c.JSON(201, gin.H{
 		"status_code": 201,
-		"file_name":   submittedFilesName,
-		"message":     "Submission Graded.",
+		"message":     "Submission Grader Started.",
+		"job":         job,
 	})
 }

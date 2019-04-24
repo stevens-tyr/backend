@@ -8,9 +8,9 @@ func Logout(c *gin.Context) {
 		"",
 		-1,
 		"/",
-		 AuthMiddleware.CookieDomain,
-		 AuthMiddleware.SecureCookie,
-		 AuthMiddleware.CookieHTTPOnly,
+		AuthMiddleware.CookieDomain,
+		AuthMiddleware.SecureCookie,
+		AuthMiddleware.CookieHTTPOnly,
 	)
 
 	c.JSON(200, gin.H{

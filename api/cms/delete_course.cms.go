@@ -12,13 +12,13 @@ func DeleteCourse(c *gin.Context) {
 		c.Set("error", err)
 		return
 	}
-	
+
 	course, err := cm.GetByID(cid)
 	if err != nil {
 		c.Set("error", err)
 		return
 	}
-	
+
 	for _, aid := range course.Assignments {
 		assign, err := am.Get(aid)
 		if err != nil {
@@ -40,7 +40,7 @@ func DeleteCourse(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	err = cm.Delete(cid)
 	if err != nil {
 		c.Set("error", err)

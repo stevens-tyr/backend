@@ -15,7 +15,7 @@ func CourseAssignments(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{
-		"message": "Course assignments.",
+		"message":     "Course assignments.",
 		"assignments": assignments,
 	})
 }
