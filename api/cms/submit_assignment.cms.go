@@ -3,8 +3,6 @@ package cms
 import (
 	"bytes"
 	"fmt"
-
-	// "net/http"
 	"os"
 	"strconv"
 
@@ -12,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
+	"backend/errors"
 	"backend/utils"
 
 	"github.com/stevens-tyr/tyr-gin"
@@ -66,9 +65,14 @@ func SubmitAssignment(c *gin.Context) {
 	aid, _ := c.Get("aid")
 
 	// See if previous submission exists
-	_, attempt, err := am.LatestUserSubmission(aid, uid)
+	assign, attempt, err := am.LatestUserSubmission(aid, uid)
 	if err != nil {
 		c.Set("error", err)
+		return
+	}
+
+	if attempt+1 > assign.NumAttempts {
+		c.Set("error", errors.ErrorSubmissionAttemptsExceeded)
 		return
 	}
 

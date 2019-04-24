@@ -58,6 +58,7 @@ var (
 	ErrorFailedToReadFile            = &Error{errors.New("FAILED TO READ FILE"), http.StatusInternalServerError}
 	ErrorFailedToConvertStructToJSON = &Error{errors.New("FAILED TO CONVERT STRUCT TO JSON"), http.StatusInternalServerError}
 	ErrorFailedToWriteCSV            = &Error{errors.New("FAILED TO WRITE TO CSV"), http.StatusInternalServerError}
+	ErrorSubmissionAttemptsExceeded  = &Error{errors.New("EXCEEDED NUMBER OF SUBMISSION ATTEMPTS FOR ASSIGNMENT"), http.StatusUnauthorized}
 	ErrorInvalidJobSecret            = &Error{errors.New("INVALID JOB SECRET"), http.StatusUnauthorized}
 	ErrorUnableToReachMicroService   = &Error{errors.New("MICROSERVICE CONNECT FAILURE"), http.StatusInternalServerError}
 	ErrorUnableToCreateJob           = &Error{errors.New("K8S JOB CREATION FAILURE"), http.StatusInternalServerError}
