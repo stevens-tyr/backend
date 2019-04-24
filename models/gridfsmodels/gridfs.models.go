@@ -32,7 +32,7 @@ func New() *GridFSInterface {
 	}
 }
 
-func (g *GridFSInterface) Upload(fileID interface{}, id *primitive.ObjectID, filename string, file io.Reader) (errors.APIError) {
+func (g *GridFSInterface) Upload(id *primitive.ObjectID, filename string, file io.Reader) errors.APIError {
 	var nid primitive.ObjectID
 	if id == nil {
 		nid = primitive.NewObjectID()

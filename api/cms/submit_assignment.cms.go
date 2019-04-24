@@ -3,8 +3,6 @@ package cms
 import (
 	"bytes"
 	"fmt"
-	"os"
-	"strconv"
 
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
@@ -12,8 +10,6 @@ import (
 
 	"backend/errors"
 	"backend/utils"
-
-	"github.com/stevens-tyr/tyr-gin"
 )
 
 // SubmitAssignment will submit and grade the submission. Also updates the assignment.
@@ -33,29 +29,11 @@ func SubmitAssignment(c *gin.Context) {
 	// Upload
 	claims := jwt.ExtractClaims(c)
 
-	fdb, err := tyrgin.GetMongoDB(os.Getenv("GRIDFS_DB_NAME"))
-	if err != nil {
-		c.Set("error", err)
-		return
-	}
-
-	bucketSize, err := strconv.Atoi(os.Getenv("UPLOAD_SIZE"))
-	if err != nil {
-		c.Set("error", err)
-		return
-	}
-
-	bucket, err := tyrgin.GetGridFSBucket(fdb, "fs", int32(bucketSize))
-	if err != nil {
-		c.Set("error", err)
-		return
-	}
-
 	sid := primitive.NewObjectID()
 	fid := primitive.NewObjectID()
 	submittedFilesName := fmt.Sprintf("sub-%s-%s.tar.gz", c.Param("aid"), claims["uid"])
 	reader := bytes.NewReader(submissionFiles)
-	err = bucket.GridFSUploadFile(fid, submittedFilesName, reader)
+	err = gfs.Upload(&fid, submittedFilesName, reader)
 	if err != nil {
 		c.Set("error", err)
 		return

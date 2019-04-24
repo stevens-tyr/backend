@@ -50,7 +50,7 @@ func UpdateAssignment(c *gin.Context) {
 			return
 		}
 
-		err = gfs.Upload(aid, &assign.SupportingFiles, assign.Name, bytes.NewReader(supportingFiles))
+		err = gfs.Upload(&assign.SupportingFiles, assign.Name, bytes.NewReader(supportingFiles))
 		if err != nil {
 			c.Set("error", err)
 			am.Delete(aid)

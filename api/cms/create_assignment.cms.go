@@ -75,7 +75,7 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	err = gfs.Upload(*aid, supportingFilesID, capre.Name, bytes.NewReader(supportingFiles))
+	err = gfs.Upload(supportingFilesID, capre.Name, bytes.NewReader(supportingFiles))
 	if err != nil {
 		c.Set("error", err)
 		am.Delete(*aid)
@@ -135,7 +135,7 @@ func CreateAssignmentFromFile(c *gin.Context) {
 		return
 	}
 
-	err = gfs.Upload(*aid, supportingFilesID, ca.Name, bytes.NewReader(supportingFiles))
+	err = gfs.Upload(supportingFilesID, ca.Name, bytes.NewReader(supportingFiles))
 	if err != nil {
 		c.Set("error", err)
 		return
