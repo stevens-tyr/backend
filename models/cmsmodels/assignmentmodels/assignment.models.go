@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -13,12 +14,17 @@ import (
 
 	"backend/errors"
 	"backend/forms"
-	submodels "backend/models/cmsmodels/submissionmodels"
 
 	"github.com/stevens-tyr/tyr-gin"
 )
 
 type (
+	AssignmentSubmission struct {
+		UserID        primitive.ObjectID `bson:"userID" json:"userID" binding:"required"`
+		SubmissionID  primitive.ObjectID `bson:"submissionID" json:"submissionID" binding:"required"`
+		AttemptNumber int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
+	}
+
 	Test struct {
 		Name           string `bson:"name" json:"name" binding:"required"`
 		ExpectedOutput string `bson:"expectedOutput" json:"expectedOutput" binding:"required"`
@@ -28,18 +34,18 @@ type (
 
 	// MongoAssignment struct to store information about an assignment.
 	MongoAssignment struct {
-		ID              primitive.ObjectID          `bson:"_id" form:"id" json:"id"`
-		Language        string                      `bson:"language" form:"language" binding:"required" json:"language"`
-		Version         string                      `bson:"version" form:"version" binding:"required" json:"version"`
-		Name            string                      `bson:"name" form:"name" binding:"required" json:"name"`
-		NumAttempts     int                         `bson:"numAttempts" form:"numAttempts" binding:"required" json:"numAttempts"`
-		Description     string                      `bson:"description" form:"description" binding:"required" json:"description"`
-		DueDate         primitive.DateTime          `bson:"dueDate" form:"dueDate" binding:"required" json:"dueDate"`
-		Published       bool                        `bson:"published" form:"published" binding:"required" json:"-"`
-		SupportingFiles string                      `bson:"supportingFiles" form:"supportingFiles" json:"supportingFiles"`
-		TestBuildCMD    string                      `bson:"testBuildCMD" form:"testBuildCMD" json:"testBuildCMD"`
-		Tests           []Test                      `bson:"tests" form:"tests" binding:"required" json:"tests"`
-		Submissions     []submodels.MongoSubmission `bson:"submissions" form:"submissions" json:"submissions"`
+		ID              primitive.ObjectID     `bson:"_id" form:"id" json:"id"`
+		Language        string                 `bson:"language" form:"language" binding:"required" json:"language"`
+		Version         string                 `bson:"version" form:"version" binding:"required" json:"version"`
+		Name            string                 `bson:"name" form:"name" binding:"required" json:"name"`
+		NumAttempts     int                    `bson:"numAttempts" form:"numAttempts" binding:"required" json:"numAttempts"`
+		Description     string                 `bson:"description" form:"description" binding:"required" json:"description"`
+		DueDate         primitive.DateTime     `bson:"dueDate" form:"dueDate" binding:"required" json:"dueDate"`
+		Published       bool                   `bson:"published" form:"published" binding:"required" json:"-"`
+		SupportingFiles string                 `bson:"supportingFiles" form:"supportingFiles" json:"supportingFiles"`
+		TestBuildCMD    string                 `bson:"testBuildCMD" form:"testBuildCMD" json:"testBuildCMD"`
+		Tests           []Test                 `bson:"tests" form:"tests" binding:"required" json:"tests"`
+		Submissions     []AssignmentSubmission `bson:"submissions" form:"submissions" json:"submissions"`
 	}
 
 	AssignmentInterface struct {
@@ -78,7 +84,7 @@ func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid st
 		Published:       false,
 		TestBuildCMD:    form.TestBuildCMD,
 		Tests:           tests,
-		Submissions:     make([]submodels.MongoSubmission, 0),
+		Submissions:     make([]AssignmentSubmission, 0),
 	}
 
 	_, err := a.col.InsertOne(a.ctx, assign, options.InsertOne())
@@ -104,9 +110,10 @@ func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.API
 
 	err := res.Decode(&assign)
 	if err != nil {
-		return nil, errors.ErrorInvlaidBSON
+		return nil, errors.ErrorInvalidBSON
 	}
 
+	fmt.Println("GET ASSIGN:", assign)
 	return assign, nil
 }
 
@@ -143,7 +150,7 @@ func (a *AssignmentInterface) GetAsFile(aid interface{}) (*MongoAssignment, erro
 
 	err := res.Decode(&assign)
 	if err != nil {
-		return nil, errors.ErrorInvlaidBSON
+		return nil, errors.ErrorInvalidBSON
 	}
 
 	return assign, nil
@@ -194,9 +201,8 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 			},
 		}
 		query = append(query, project, bson.M{
-			"$project": bson.M{
-				"submissions.cases.adminFacing": 0,
-			},
+			"$match": bson.M{
+				"$expr": bson.M{"$eq": bson.A{"$assignment.published", true}}},
 		})
 	} else {
 		query = append(query, project)
@@ -205,7 +211,7 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 	var assign map[string]interface{}
 	cur, err := a.col.Aggregate(a.ctx, query, options.Aggregate())
 	if err != nil {
-		return nil, errors.ErrorInvlaidBSON
+		return nil, errors.ErrorInvalidBSON
 	}
 
 	for cur.Next(a.ctx) {
@@ -226,12 +232,32 @@ func (a *AssignmentInterface) LatestUserSubmission(aid, uid interface{}) (*Mongo
 
 	attempt := 0
 	for _, assignSub := range assignment.Submissions {
-		if assignSub.UserID == uid && assignSub.AttemptNumber > attempt {
+		if assignSub.UserID == uid.(primitive.ObjectID) && assignSub.AttemptNumber > attempt {
 			attempt = assignSub.AttemptNumber
 		}
 	}
 
 	return assignment, attempt, nil
+}
+
+func (a *AssignmentInterface) InsertSubmission(aid, uid, sid interface{}, attempt int) errors.APIError {
+	insert := AssignmentSubmission{
+		UserID:        uid.(primitive.ObjectID),
+		SubmissionID:  sid.(primitive.ObjectID),
+		AttemptNumber: attempt,
+	}
+
+	_, err := a.col.UpdateOne(
+		a.ctx,
+		bson.M{"_id": aid},
+		bson.M{"$push": bson.M{"submissions": &insert}},
+		options.Update(),
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+
+	return nil
 }
 
 func (a *AssignmentInterface) AsFile(aid interface{}) (*bytes.Reader, string, int64, errors.APIError) {

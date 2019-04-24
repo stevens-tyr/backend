@@ -1,8 +1,12 @@
 package submissionmodels
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 
@@ -29,7 +33,7 @@ type (
 		Name          string `bson:"name" json:"name" binding:"required"`
 	}
 
-	// Submission struct the struct to represent a submission to an page.
+	// MongoSubmission struct the struct to represent a submission to an page.
 	MongoSubmission struct {
 		ID             primitive.ObjectID `bson:"_id" json:"id" binding:"required"`
 		UserID         primitive.ObjectID `bson:"userID" json:"userID" binding:"required"`
@@ -37,8 +41,8 @@ type (
 		AttemptNumber  int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
 		SubmissionDate primitive.DateTime `bson:"submissionDate" json:"submissionDate" binding:"required"`
 		File           string             `bson:"file" json:"file" binding:"required"`
-		ErrorTesting   bool               `bson:"errorTesting" json:"errorTesting" binding:"required"`
-		Results        []WorkerResult     `bson:"results" json:"results" binding:"required"`
+		ErrorTesting   bool               `bson:"errorTesting" json:"errorTesting" binding:"exists"`
+		Results        []WorkerResult     `bson:"results" json:"results" binding:"exists"`
 		InProgress     bool               `bson:"inProgress" json:"inProgress"`
 	}
 
@@ -82,7 +86,7 @@ func (s *SubmissionInterface) Get(sid interface{}) (*MongoSubmission, errors.API
 
 	err := res.Decode(&sub)
 	if err != nil {
-		return nil, errors.ErrorInvlaidBSON
+		return nil, errors.ErrorInvalidBSON
 	}
 
 	return sub, nil
@@ -102,7 +106,7 @@ func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmi
 		var submission MongoSubmission
 		err = cur.Decode(&submission)
 		if err != nil {
-			return submissions, errors.ErrorInvlaidBSON
+			return submissions, errors.ErrorInvalidBSON
 		}
 
 		submissions = append(submissions, submission)
@@ -188,7 +192,7 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 	)
 	if err != nil {
 		fmt.Println(err)
-		return nil, errors.ErrorInvlaidBSON
+		return nil, errors.ErrorInvalidBSON
 	}
 
 	for cur.Next(s.ctx) {
@@ -222,7 +226,7 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 	return submission, nil
 }
 
-func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, filename string) errors.APIError {
+func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, filename string) (string, errors.APIError) {
 	submission := MongoSubmission{
 		ID:             sid.(primitive.ObjectID),
 		UserID:         uid.(primitive.ObjectID),
@@ -237,10 +241,35 @@ func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, fil
 
 	_, err := s.col.InsertOne(s.ctx, &submission, options.InsertOne())
 	if err != nil {
-		return errors.ErrorDatabaseFailedCreate
+		return "", errors.ErrorDatabaseFailedCreate
 	}
 
-	// TODO API Call to court herald
+	// API Call to court herald
+	url := fmt.Sprintf("http://%s/api/v1/grader/%s/new", os.Getenv("COURT_HERALD_URL"), sid.(primitive.ObjectID).Hex())
+	bs, err := json.Marshal(submission)
+	if err != nil {
+		return "", errors.ErrorInvalidJSON
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bs))
+	req.Header.Set("Content-Type", "application/json")
 
-	return nil
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return "", errors.ErrorUnableToReachMicroService
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", errors.ErrorUnableToCreateJob
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("court herald response Body:", string(body))
+
+	var data map[string]interface{}
+	json.Unmarshal(body, &data)
+
+	return data["job"].(string), nil
 }

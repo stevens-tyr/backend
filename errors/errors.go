@@ -46,7 +46,7 @@ var (
 	ErrorUserAlreadyEnrolled         = &Error{errors.New("USER ALREADY ENROLLED IN COURSE"), http.StatusConflict}
 	ErrorInvalidObjectID             = &Error{errors.New("INVALID OBJECT ID"), http.StatusBadRequest}
 	ErrorInvalidJSON                 = &Error{errors.New("INVALID JSON"), http.StatusBadRequest}
-	ErrorInvlaidBSON                 = &Error{errors.New("INVALID BSON OBJECT DECODED"), http.StatusInternalServerError}
+	ErrorInvalidBSON                 = &Error{errors.New("INVALID BSON OBJECT DECODED"), http.StatusInternalServerError}
 	ErrorGenerateTokenFailure        = &Error{errors.New("GENERATE TOKEN FAILURE"), http.StatusInternalServerError}
 	ErrorGridFSUploadFailure         = &Error{errors.New("GRIDFS UPLOAD FAILURE"), http.StatusInternalServerError}
 	ErrorGridFSDeleteFailure         = &Error{errors.New("GRIDFS DELETE FAILURE"), http.StatusInternalServerError}
@@ -57,6 +57,8 @@ var (
 	ErrorFailedToOpenFile            = &Error{errors.New("FAILED TO OPEN FILE"), http.StatusInternalServerError}
 	ErrorFailedToReadFile            = &Error{errors.New("FAILED TO READ FILE"), http.StatusInternalServerError}
 	ErrorFailedToConvertStructToJSON = &Error{errors.New("FAILED TO CONVERT STRUCT TO JSON"), http.StatusInternalServerError}
-	ErrorFailedToWriteCSV = &Error{errors.New("FAILED TO WRITE TO CSV"), http.StatusInternalServerError}
-	ErrorInvalidJobSecret = &Error{errors.New("INVALID JOB SECRET"), http.StatusUnauthorized}
+	ErrorFailedToWriteCSV            = &Error{errors.New("FAILED TO WRITE TO CSV"), http.StatusInternalServerError}
+	ErrorInvalidJobSecret            = &Error{errors.New("INVALID JOB SECRET"), http.StatusUnauthorized}
+	ErrorUnableToReachMicroService   = &Error{errors.New("MICROSERVICE CONNECT FAILURE"), http.StatusInternalServerError}
+	ErrorUnableToCreateJob           = &Error{errors.New("K8S JOB CREATION FAILURE"), http.StatusInternalServerError}
 )

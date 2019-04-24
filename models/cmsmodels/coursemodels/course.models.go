@@ -228,7 +228,7 @@ func (c *CourseInterface) Get(cid, uid interface{}, role string) (map[string]int
 		options.Aggregate(),
 	)
 	if err != nil {
-		return nil, errors.ErrorInvlaidBSON
+		return nil, errors.ErrorInvalidBSON
 	}
 
 	for cur.Next(c.ctx) {
@@ -391,7 +391,7 @@ func (c *CourseInterface) GetAssignments(cid interface{}, role string) ([]forms.
 		var assignment map[string]forms.AssignmentAggQuery
 		err = cur.Decode(&assignment)
 		if err != nil {
-			return assignments, errors.ErrorInvlaidBSON
+			return assignments, errors.ErrorInvalidBSON
 		}
 		if role != "student" || assignment["assignment"].Published {
 			assignments = append(assignments, assignment["assignment"])
@@ -463,7 +463,7 @@ func (c *CourseInterface) GetGradesAsCSV(aid, cid interface{}) (*bytes.Buffer, s
 		options.Aggregate(),
 	)
 	if err != nil {
-		return nil, "", 0, errors.ErrorInvlaidBSON
+		return nil, "", 0, errors.ErrorInvalidBSON
 	}
 
 	for cur.Next(c.ctx) {

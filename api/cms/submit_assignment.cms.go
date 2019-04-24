@@ -62,18 +62,23 @@ func SubmitAssignment(c *gin.Context) {
 	}
 
 	uid, _ := c.Get("uid")
-
-	// See if previous submission exists
-	//cid := c.Param("cid")
+	fmt.Println("USER UID:", uid)
 	aid, _ := c.Get("aid")
 
+	// See if previous submission exists
 	_, attempt, err := am.LatestUserSubmission(aid, uid)
 	if err != nil {
 		c.Set("error", err)
 		return
 	}
 
-	err = sm.Submit(aid, uid, sid, attempt+1, submittedFilesName)
+	err = am.InsertSubmission(aid, uid, sid, attempt+1)
+	if err != nil {
+		c.Set("error", err)
+		return
+	}
+
+	job, err := sm.Submit(aid, uid, sid, attempt+1, submittedFilesName)
 	if err != nil {
 		c.Set("error", err)
 		return
@@ -81,7 +86,7 @@ func SubmitAssignment(c *gin.Context) {
 
 	c.JSON(201, gin.H{
 		"status_code": 201,
-		"file_name":   submittedFilesName,
-		"message":     "Submission Graded.",
+		"message":     "Submission Grader Started.",
+		"job":         job,
 	})
 }
