@@ -3,9 +3,8 @@ package cms
 import (
 	"fmt"
 	"os"
-	
+
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"backend/errors"
 )
@@ -16,7 +15,7 @@ func JobDownloadSubmission(c *gin.Context) {
 		c.Set("error", errors.ErrorInvalidJobSecret)
 		return
 	}
-	
+
 	sid, _ := c.Get("sid")
 	file, numBytes, err := gfs.Download(sid)
 	if err != nil {
@@ -31,28 +30,21 @@ func JobDownloadSubmission(c *gin.Context) {
 	c.DataFromReader(200, numBytes, "application/tar+gzip", file, additonalHeaders)
 }
 
-
 func JobDownloadSupportingFiles(c *gin.Context) {
 	key := c.Param("secret")
 	if key != os.Getenv("JOB_SECRET") {
 		c.Set("error", errors.ErrorInvalidJobSecret)
 		return
 	}
-	
+
 	aid, _ := c.Get("aid")
 	assign, err := am.Get(aid)
 	if err != nil {
 		c.Set("error", err)
 		return
 	}
-	
-	sfid, errs := primitive.ObjectIDFromHex(assign.SupportingFiles)
-	if errs != nil {
-		c.Set("error", errors.ErrorInvalidObjectID)
-		return
-	}
-	
-	file, numBytes, err := gfs.Download(sfid)
+
+	file, numBytes, err := gfs.Download(assign.SupportingFiles)
 	if err != nil {
 		c.Set("error", err)
 		return

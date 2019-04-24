@@ -37,6 +37,7 @@ type (
 	MongoSubmission struct {
 		ID             primitive.ObjectID `bson:"_id" json:"id" binding:"required"`
 		UserID         primitive.ObjectID `bson:"userID" json:"userID" binding:"required"`
+		FileID         primitive.ObjectID `bson:"fileID" json:"fileID" binding:"required"`
 		AssignmentID   primitive.ObjectID `bson:"assignmentID" json:"assignmentID" binding:"required"`
 		AttemptNumber  int                `bson:"attemptNumber" json:"attemptNumber" binding:"required"`
 		SubmissionDate primitive.DateTime `bson:"submissionDate" json:"submissionDate" binding:"required"`
@@ -226,10 +227,11 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 	return submission, nil
 }
 
-func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, filename string) (string, errors.APIError) {
+func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string) (string, errors.APIError) {
 	submission := MongoSubmission{
 		ID:             sid.(primitive.ObjectID),
 		UserID:         uid.(primitive.ObjectID),
+		FileID:         fid.(primitive.ObjectID),
 		AssignmentID:   aid.(primitive.ObjectID),
 		AttemptNumber:  attempt,
 		SubmissionDate: primitive.DateTime(time.Now().UnixNano() / 1000000),

@@ -1,7 +1,7 @@
 package cms
 
 import (
-  "backend/models"
+	"backend/models"
 )
 
 var am = models.NewMongoAssignmentInterface()

@@ -78,7 +78,7 @@ func (u *UserInterface) FindOne(email string) (*MongoUser, errors.APIError) {
 
 func (u *UserInterface) FindOneById(uid interface{}) (*MongoUser, errors.APIError) {
 	var user *MongoUser
-	
+
 	res := u.col.FindOne(u.ctx, bson.M{"_id": uid}, options.FindOne())
 	res.Decode(&user)
 	fmt.Println("user", user)
@@ -233,7 +233,7 @@ func (u *UserInterface) AddCourse(level string, cid, uid interface{}) errors.API
 	if alreadyEnrolled {
 		return errors.ErrorUserAlreadyEnrolled
 	}
-	
+
 	_, err := u.col.UpdateOne(
 		u.ctx,
 		bson.M{"_id": uid},

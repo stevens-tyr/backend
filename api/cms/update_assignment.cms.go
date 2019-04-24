@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"backend/errors"
 	"backend/forms"
@@ -45,19 +44,13 @@ func UpdateAssignment(c *gin.Context) {
 			return
 		}
 
-		sfID, errs := primitive.ObjectIDFromHex(assign.SupportingFiles)
-		if errs != nil {
-			c.Set("error", errors.ErrorInvalidObjectID)
-			return
-		}
-
-		err = gfs.Delete(sfID)
+		err = gfs.Delete(assign.SupportingFiles)
 		if err != nil {
 			c.Set("error", err)
 			return
 		}
 
-		err = gfs.Upload(aid, &sfID, assign.Name, bytes.NewReader(supportingFiles))
+		err = gfs.Upload(aid, &assign.SupportingFiles, assign.Name, bytes.NewReader(supportingFiles))
 		if err != nil {
 			c.Set("error", err)
 			am.Delete(aid)

@@ -41,7 +41,7 @@ type (
 		Description     string                 `bson:"description" form:"description" binding:"required" json:"description"`
 		DueDate         primitive.DateTime     `bson:"dueDate" form:"dueDate" binding:"required" json:"dueDate"`
 		Published       bool                   `bson:"published" form:"published" binding:"required" json:"-"`
-		SupportingFiles string                 `bson:"supportingFiles" form:"supportingFiles" json:"supportingFiles"`
+		SupportingFiles primitive.ObjectID     `bson:"supportingFiles" form:"supportingFiles" json:"supportingFiles"`
 		TestBuildCMD    string                 `bson:"testBuildCMD" form:"testBuildCMD" json:"testBuildCMD"`
 		Tests           []Test                 `bson:"tests" form:"tests" binding:"required" json:"tests"`
 		Submissions     []AssignmentSubmission `bson:"submissions" form:"submissions" json:"submissions"`
@@ -78,7 +78,7 @@ func (a *AssignmentInterface) Create(form forms.CreateAssignmentPostForm, cid st
 		Name:            form.Name,
 		NumAttempts:     form.NumAttempts,
 		Description:     form.Description,
-		SupportingFiles: supportingFiles.Hex(),
+		SupportingFiles: supportingFiles,
 		DueDate:         form.DueDate,
 		Published:       false,
 		TestBuildCMD:    form.TestBuildCMD,
