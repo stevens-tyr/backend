@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -113,7 +112,6 @@ func (a *AssignmentInterface) Get(aid interface{}) (*MongoAssignment, errors.API
 		return nil, errors.ErrorInvalidBSON
 	}
 
-	fmt.Println("GET ASSIGN:", assign)
 	return assign, nil
 }
 

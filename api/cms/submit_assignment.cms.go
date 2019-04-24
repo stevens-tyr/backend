@@ -62,7 +62,6 @@ func SubmitAssignment(c *gin.Context) {
 	}
 
 	uid, _ := c.Get("uid")
-	fmt.Println("USER UID:", uid)
 	aid, _ := c.Get("aid")
 
 	// See if previous submission exists

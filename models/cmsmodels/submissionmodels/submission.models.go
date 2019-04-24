@@ -266,7 +266,6 @@ func (s *SubmissionInterface) Submit(aid, uid, sid interface{}, attempt int, fil
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("court herald response Body:", string(body))
 
 	var data map[string]interface{}
 	json.Unmarshal(body, &data)
