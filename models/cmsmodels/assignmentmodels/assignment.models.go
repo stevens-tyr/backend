@@ -258,6 +258,20 @@ func (a *AssignmentInterface) InsertSubmission(aid, uid, sid interface{}, attemp
 	return nil
 }
 
+func (a *AssignmentInterface) DeleteSubmission(aid, sid interface{}) errors.APIError {
+	_, err := a.col.UpdateOne(
+		a.ctx,
+		bson.M{"_id": aid},
+		bson.M{"$pull": bson.M{"submissions": bson.M{"submissionID": sid.(primitive.ObjectID)}}},
+		options.Update(),
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+
+	return nil
+}
+
 func (a *AssignmentInterface) AsFile(aid interface{}) (*bytes.Reader, string, int64, errors.APIError) {
 	var jsonBytes []byte
 	assignment, err := a.GetAsFile(aid)

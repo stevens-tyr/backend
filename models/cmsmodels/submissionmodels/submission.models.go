@@ -93,6 +93,15 @@ func (s *SubmissionInterface) Get(sid interface{}) (*MongoSubmission, errors.API
 	return sub, nil
 }
 
+func (s *SubmissionInterface) Delete(sid interface{}) errors.APIError {
+	_, err := s.col.DeleteOne(s.ctx, bson.M{"_id": sid}, options.Delete())
+	if err != nil {
+		return errors.ErrorDatabaseFailedDelete
+	}
+
+	return nil
+}
+
 func (s *SubmissionInterface) GetUsersSubmissions(uid interface{}) ([]MongoSubmission, errors.APIError) {
 	var submissions []MongoSubmission
 	cur, err := s.col.Find(
@@ -227,7 +236,7 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 	return submission, nil
 }
 
-func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string) (string, errors.APIError) {
+func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string, tests interface{}) (string, errors.APIError) {
 	submission := MongoSubmission{
 		ID:             sid.(primitive.ObjectID),
 		UserID:         uid.(primitive.ObjectID),
@@ -248,8 +257,12 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 
 	// API Call to court herald
 	url := fmt.Sprintf("http://%s/api/v1/grader/%s/new", os.Getenv("COURT_HERALD_URL"), sid.(primitive.ObjectID).Hex())
-	bs, err := json.Marshal(submission)
+	requestData := make(map[string]interface{})
+	requestData["submission"] = submission
+	requestData["tests"] = tests
+	bs, err := json.Marshal(&requestData)
 	if err != nil {
+		s.Delete(sid)
 		return "", errors.ErrorInvalidJSON
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bs))
@@ -258,12 +271,13 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		s.Delete(sid)
 		return "", errors.ErrorUnableToReachMicroService
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		s.Delete(sid)
 		return "", errors.ErrorUnableToCreateJob
 	}
 
