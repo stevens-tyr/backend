@@ -2,7 +2,6 @@ package cms
 
 import (
 	submodels "backend/models/cmsmodels/submissionmodels"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +12,6 @@ func UpdateGrade(c *gin.Context) {
 
 	var testResults []submodels.WorkerResult
 	c.BindJSON(&testResults)
-	fmt.Println(testResults[0])
 
 	err := sm.UpdateGrade(sid, testResults)
 	if err != nil {

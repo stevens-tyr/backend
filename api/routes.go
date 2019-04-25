@@ -51,10 +51,10 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/assignment/submit/:aid", tyrgin.POST),
 		tyrgin.NewRoute(cms.UpdateAssignment, "course/:cid/assignment/:aid/update", tyrgin.PATCH),
 		tyrgin.NewRoute(cms.UpdateCourse, "course/:cid/update", tyrgin.PATCH),
-		tyrgin.NewRoute(cms.UpdateGrade, "course/:cid/assignment/:aid/submission/:sid/update", tyrgin.PATCH),
 	}
 
 	var cmsEndpoints = []tyrgin.APIAction{
+		tyrgin.NewRoute(cms.UpdateGrade, "job/:secret/submission/:sid/update", tyrgin.PATCH),
 		tyrgin.NewRoute(cms.JobDownloadSubmission, "job/:secret/submission/:sid/download", tyrgin.GET),
 		tyrgin.NewRoute(cms.JobDownloadSupportingFiles, "job/:secret/assignment/:aid/supportingfiles/download", tyrgin.GET),
 		tyrgin.NewRoute(auth.Register, "register", tyrgin.POST),

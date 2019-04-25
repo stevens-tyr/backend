@@ -236,7 +236,7 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 	return submission, nil
 }
 
-func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string, tests interface{}) (string, errors.APIError) {
+func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string, tests interface{}, testBuildCMD string, lang string) (string, errors.APIError) {
 	submission := MongoSubmission{
 		ID:             sid.(primitive.ObjectID),
 		UserID:         uid.(primitive.ObjectID),
@@ -260,6 +260,8 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 	requestData := make(map[string]interface{})
 	requestData["submission"] = submission
 	requestData["tests"] = tests
+	requestData["testBuildCMD"] = testBuildCMD
+	requestData["language"] = lang
 	bs, err := json.Marshal(&requestData)
 	if err != nil {
 		s.Delete(sid)

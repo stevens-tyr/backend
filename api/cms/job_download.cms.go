@@ -24,8 +24,6 @@ func JobDownloadSubmission(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("FILE:", sub.FileID)
-
 	file, numBytes, err := gfs.Download(sub.FileID)
 	if err != nil {
 		c.Set("error", err)
