@@ -2,7 +2,6 @@ package usermodels
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -67,7 +66,6 @@ func (u *UserInterface) FindOne(email string) (*MongoUser, errors.APIError) {
 
 	res := u.col.FindOne(u.ctx, bson.M{"email": email}, options.FindOne())
 	res.Decode(&user)
-	fmt.Println("user", user)
 
 	if user == nil {
 		return nil, errors.ErrorResourceNotFound
@@ -81,7 +79,6 @@ func (u *UserInterface) FindOneById(uid interface{}) (*MongoUser, errors.APIErro
 
 	res := u.col.FindOne(u.ctx, bson.M{"_id": uid}, options.FindOne())
 	res.Decode(&user)
-	fmt.Println("user", user)
 
 	if user == nil {
 		return nil, errors.ErrorResourceNotFound
@@ -192,7 +189,6 @@ func (u *UserInterface) GetCourses(uid interface{}, courseLevels map[string]inte
 		}
 
 		course := coursem["course"]
-		fmt.Println("courseID", course.ID.Hex())
 		course.Role = courseLevels[course.ID.Hex()].(string)
 		courses = append(courses, course)
 	}

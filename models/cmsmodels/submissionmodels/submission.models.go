@@ -218,7 +218,6 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 		options.Aggregate(),
 	)
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.ErrorInvalidBSON
 	}
 

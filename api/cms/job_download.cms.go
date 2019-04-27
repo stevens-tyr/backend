@@ -19,7 +19,6 @@ func JobDownloadSubmission(c *gin.Context) {
 	sid, _ := c.Get("sid")
 	sub, err := sm.Get(sid)
 	if err != nil {
-		fmt.Println("here")
 		c.Set("error", err)
 		return
 	}

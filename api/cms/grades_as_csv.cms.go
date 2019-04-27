@@ -1,8 +1,8 @@
 package cms
 
 import (
+	"backend/errors"
 	"fmt"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,7 +12,7 @@ func GradesAsCSV(c *gin.Context) {
 
 	file, filename, numBytes, err := cm.GetGradesAsCSV(aid, cid)
 	if err != nil {
-		fmt.Println("err", err)
+		c.Set("error", errors.ErrorFailedToWriteCSV)
 	}
 
 	additonalHeaders := map[string]string{
