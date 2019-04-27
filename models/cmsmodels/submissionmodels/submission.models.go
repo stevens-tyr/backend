@@ -16,7 +16,6 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 
 	"backend/errors"
-
 	"github.com/stevens-tyr/tyr-gin"
 )
 
@@ -71,6 +70,24 @@ func (s *SubmissionInterface) UpdateGrade(sid interface{}, results []WorkerResul
 			"$set": bson.M{
 				"results":    results,
 				"inProgress": false,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+
+	return nil
+}
+
+func (s *SubmissionInterface) UpdateError(sid interface{}) errors.APIError {
+	_, err := s.col.UpdateOne(
+		s.ctx,
+		bson.M{"_id": sid},
+		bson.M{
+			"$set": bson.M{
+				"errorTesting": true,
+				"inProgress":   false,
 			},
 		},
 	)
@@ -256,7 +273,7 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 	}
 
 	// API Call to court herald
-	url := fmt.Sprintf("http://%s/api/v1/grader/%s/new", os.Getenv("COURT_HERALD_URL"), sid.(primitive.ObjectID).Hex())
+	url := fmt.Sprintf("%s/api/v1/grader/%s/new", os.Getenv("COURT_HERALD_URL"), sid.(primitive.ObjectID).Hex())
 	requestData := make(map[string]interface{})
 	requestData["submission"] = submission
 	requestData["tests"] = tests

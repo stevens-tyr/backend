@@ -20,7 +20,7 @@ spec:
           imagePullPolicy: 'Always'
           env:
             - name: COURT_HERALD_URL
-              value: 'court-herald-svc.default.svc.cluster.local:4444'
+              value: 'http://court-herald-svc.default.svc.cluster.local:4444'
             - name: MONGO_URI
               value: 'mongo-0.mongo:27017'
             - name: GRIDFS_DB_NAME
