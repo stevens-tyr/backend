@@ -195,12 +195,12 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 			"$filter": bson.M{
 				"input": "$submissions",
 				"as":    "submission",
-				"cond":  bson.M{"$eq": bson.A{"$$submission.userID", uid}},
+				"cond":  bson.M{"$eq": bson.A{"$$submission.userID", uid.(primitive.ObjectID)}},
 			},
 		}
 		query = append(query, project, bson.M{
 			"$match": bson.M{
-				"$expr": bson.M{"$eq": bson.A{"$assignment.published", true}}},
+				"$expr": bson.M{"$eq": bson.A{"$published", true}}},
 		})
 	} else {
 		query = append(query, project)
