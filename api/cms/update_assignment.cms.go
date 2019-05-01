@@ -3,6 +3,7 @@ package cms
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ func UpdateAssignment(c *gin.Context) {
 	var up forms.UpdateAssignmentForm
 	errs := c.ShouldBind(&up)
 	if errs != nil {
+		fmt.Println("ERROR:", errs)
 		c.Set("error", errors.ErrorInvalidJSON)
 		return
 	}

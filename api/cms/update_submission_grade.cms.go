@@ -18,7 +18,6 @@ func UpdateGrade(c *gin.Context) {
 		c.Set("error", err)
 		return
 	}
-
 	c.JSON(200, gin.H{
 		"message": "Submission Grade Updated.",
 	})
@@ -33,7 +32,7 @@ func UpdateGradeError(c *gin.Context) {
 		c.Set("error", err)
 		return
 	}
-
+  
 	c.JSON(200, gin.H{
 		"message": "Submission Error Update.",
 	})

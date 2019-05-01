@@ -278,6 +278,7 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 	requestData["tests"] = tests
 	requestData["testBuildCMD"] = testBuildCMD
 	requestData["language"] = lang
+
 	bs, err := json.Marshal(&requestData)
 	if err != nil {
 		s.Delete(sid)
@@ -298,6 +299,7 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 		s.Delete(sid)
 		return "", errors.ErrorUnableToCreateJob
 	}
+	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
