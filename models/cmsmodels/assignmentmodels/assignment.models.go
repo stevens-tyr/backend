@@ -157,14 +157,54 @@ func (a *AssignmentInterface) GetAsFile(aid interface{}) (*MongoAssignment, erro
 func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[string]interface{}, errors.APIError) {
 	query := []interface{}{
 		bson.M{"$match": bson.M{"_id": aid}},
-		bson.M{
+	}
+
+	if role == "student" {
+		query = append(query, bson.M{
 			"$lookup": bson.M{
 				"from":         "submissions",
 				"localField":   "submissions.submissionID",
 				"foreignField": "_id",
 				"as":           "submissions",
 			},
-		},
+		})
+	} else {
+		query = append(query, bson.M{
+			"$lookup": bson.M{
+				"from": "submissions",
+				"let":  bson.M{"ass": "$_id"},
+				"as":   "studentSubmissions",
+				"pipeline": bson.A{
+					bson.M{"$match": bson.M{"$expr": bson.M{"$eq": bson.A{"$$ass", "$assignmentID"}}}},
+					bson.M{"$sort": bson.M{"submissionDate": 1}},
+					bson.M{"$group": bson.M{"_id": "$userID", "submissions": bson.M{"$push": "$$ROOT"}}},
+					bson.M{
+						"$lookup": bson.M{
+							"from":         "users",
+							"localField":   "_id",
+							"foreignField": "_id",
+							"as":           "student",
+						},
+					},
+					bson.M{
+						"$project": bson.M{
+							"_id":         1,
+							"submissions": 1,
+							"student":     bson.M{"$arrayElemAt": bson.A{"$student", 0}},
+						},
+					},
+					bson.M{
+						"$project": bson.M{
+							"_id":               0,
+							"submissions":       1,
+							"student.email":     1,
+							"student.firstName": 1,
+							"student.lastName":  1,
+						},
+					},
+				},
+			},
+		})
 	}
 
 	project := bson.M{
@@ -186,7 +226,6 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 					"cond":  "$$test.studentFacing",
 				},
 			},
-			"submissions": 1,
 		},
 	}
 
@@ -195,14 +234,15 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 			"$filter": bson.M{
 				"input": "$submissions",
 				"as":    "submission",
-				"cond":  bson.M{"$eq": bson.A{"$$submission.userID", uid}},
+				"cond":  bson.M{"$eq": bson.A{"$$submission.userID", uid.(primitive.ObjectID)}},
 			},
 		}
 		query = append(query, project, bson.M{
 			"$match": bson.M{
-				"$expr": bson.M{"$eq": bson.A{"$assignment.published", true}}},
+				"$expr": bson.M{"$eq": bson.A{"$published", true}}},
 		})
 	} else {
+		project["$project"].(primitive.M)["studentSubmissions"] = 1
 		query = append(query, project)
 	}
 

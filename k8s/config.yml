@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plague-doctor
+  labels:
+    app: plague-doctor
+spec:
+  selector:
+    matchLabels:
+      app: plague-doctor
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: plague-doctor
+    spec:
+      containers:
+        - name: plague-doctor
+          image: robherley/plague-doctor:3fbbf4c
+          imagePullPolicy: 'Always'
+          env:
+            - name: COURT_HERALD_URL
+              value: 'http://court-herald-svc.default.svc.cluster.local:4444'
+            - name: MONGO_URI
+              value: 'mongo-0.mongo:27017'
+            - name: GRIDFS_DB_NAME
+              value: 'tyr-dev'
+            - name: DB_NAME
+              value: 'tyr-dev'
+            - name: JWT_SECRET
+              value: 'tyr-dev'
+            - name: JWT_REALM
+              value: 'tyr-dev'
+            - name: JOB_SECRET
+              value: 'tyr-dev'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plague-doctor-svc
+spec:
+  selector:
+    app: plague-doctor
+  type: NodePort
+  ports:
+    - port: 5555
+      nodePort: 32224

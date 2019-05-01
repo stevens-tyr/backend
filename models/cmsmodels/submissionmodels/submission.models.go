@@ -16,7 +16,6 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 
 	"backend/errors"
-
 	"github.com/stevens-tyr/tyr-gin"
 )
 
@@ -71,6 +70,24 @@ func (s *SubmissionInterface) UpdateGrade(sid interface{}, results []WorkerResul
 			"$set": bson.M{
 				"results":    results,
 				"inProgress": false,
+			},
+		},
+	)
+	if err != nil {
+		return errors.ErrorDatabaseFailedUpdate
+	}
+
+	return nil
+}
+
+func (s *SubmissionInterface) UpdateError(sid interface{}) errors.APIError {
+	_, err := s.col.UpdateOne(
+		s.ctx,
+		bson.M{"_id": sid},
+		bson.M{
+			"$set": bson.M{
+				"errorTesting": true,
+				"inProgress":   false,
 			},
 		},
 	)
@@ -201,7 +218,6 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 		options.Aggregate(),
 	)
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.ErrorInvalidBSON
 	}
 
@@ -236,7 +252,7 @@ func (s *SubmissionInterface) GetUsersSubmission(sid, uid interface{}) (*MongoSu
 	return submission, nil
 }
 
-func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string, tests interface{}) (string, errors.APIError) {
+func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int, filename string, tests interface{}, testBuildCMD string, lang string) (string, errors.APIError) {
 	submission := MongoSubmission{
 		ID:             sid.(primitive.ObjectID),
 		UserID:         uid.(primitive.ObjectID),
@@ -256,10 +272,13 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 	}
 
 	// API Call to court herald
-	url := fmt.Sprintf("http://%s/api/v1/grader/%s/new", os.Getenv("COURT_HERALD_URL"), sid.(primitive.ObjectID).Hex())
+	url := fmt.Sprintf("%s/api/v1/grader/%s/new", os.Getenv("COURT_HERALD_URL"), sid.(primitive.ObjectID).Hex())
 	requestData := make(map[string]interface{})
 	requestData["submission"] = submission
 	requestData["tests"] = tests
+	requestData["testBuildCMD"] = testBuildCMD
+	requestData["language"] = lang
+
 	bs, err := json.Marshal(&requestData)
 	if err != nil {
 		s.Delete(sid)
@@ -280,6 +299,7 @@ func (s *SubmissionInterface) Submit(aid, fid, uid, sid interface{}, attempt int
 		s.Delete(sid)
 		return "", errors.ErrorUnableToCreateJob
 	}
+	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
 

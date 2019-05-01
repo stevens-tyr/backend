@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/appleboy/gin-jwt"
@@ -18,7 +17,6 @@ func allowed(levels []string, claims map[string]interface{}, c *gin.Context) boo
 
 	val, found := enrolledCourses[cid.(string)]
 	c.Set("role", val)
-	fmt.Println("cid:", cid, levels, val)
 	if found && (in(levels, "any") || in(levels, val.(string))) {
 		return true
 	}
@@ -26,7 +24,7 @@ func allowed(levels []string, claims map[string]interface{}, c *gin.Context) boo
 	if in(levels, "student") && exists {
 		sub, err := sm.GetUsersSubmission(sid, uid)
 		if err != nil {
-			fmt.Println("err", err)
+			return allowed
 		}
 		if sub != nil {
 			allowed = true
@@ -88,7 +86,6 @@ func Authorizator(d interface{}, c *gin.Context) bool {
 	c.Set("uid", val)
 
 	userLevelForRouteShouldBe := determineLevel(route)
-	fmt.Println("user level:", userLevelForRouteShouldBe, route)
 	if in(userLevelForRouteShouldBe, "whitelisted") {
 		return true
 	}

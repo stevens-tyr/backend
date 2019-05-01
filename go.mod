@@ -13,7 +13,7 @@ require (
 	github.com/mongodb/mongo-go-driver v0.3.0
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
-	github.com/stevens-tyr/tyr-gin v0.0.0-20190221015336-e56b55f456e2
+	github.com/stevens-tyr/tyr-gin v0.0.0-20190425213457-b732fe2f3bd4
 	github.com/tidwall/gjson v1.2.1 // indirect
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43 // indirect
 	golang.org/x/crypto v0.0.0-20190219172222-a4c6cb3142f2

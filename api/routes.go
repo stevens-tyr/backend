@@ -44,17 +44,19 @@ func SetUp() *gin.Engine {
 		tyrgin.NewRoute(cms.Dashboard, "dashboard", tyrgin.GET),
 		tyrgin.NewRoute(cms.DeleteAssignment, "course/:cid/assignment/:aid/delete", tyrgin.DELETE),
 		tyrgin.NewRoute(cms.DeleteCourse, "course/:cid/delete", tyrgin.DELETE),
-		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/assignment/:aid/submission/:sid/:num", tyrgin.GET),
+		tyrgin.NewRoute(cms.GetSubmission, "course/:cid/assignment/:aid/submission/:sid/details", tyrgin.GET),
+		tyrgin.NewRoute(cms.DownloadSubmission, "course/:cid/assignment/:aid/submission/:sid/download/:num", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetAssignment, "course/:cid/assignment/:aid/details", tyrgin.GET),
 		tyrgin.NewRoute(cms.GetCourse, "course/:cid", tyrgin.GET),
 		tyrgin.NewRoute(cms.GradesAsCSV, "course/:cid/assignment/:aid/csv", tyrgin.GET),
 		tyrgin.NewRoute(cms.SubmitAssignment, "course/:cid/assignment/submit/:aid", tyrgin.POST),
 		tyrgin.NewRoute(cms.UpdateAssignment, "course/:cid/assignment/:aid/update", tyrgin.PATCH),
 		tyrgin.NewRoute(cms.UpdateCourse, "course/:cid/update", tyrgin.PATCH),
-		tyrgin.NewRoute(cms.UpdateGrade, "course/:cid/assignment/:aid/submission/:sid/update", tyrgin.PATCH),
 	}
 
 	var cmsEndpoints = []tyrgin.APIAction{
+		tyrgin.NewRoute(cms.UpdateGrade, "job/:secret/submission/:sid/update", tyrgin.PATCH),
+		tyrgin.NewRoute(cms.UpdateGradeError, "job/:secret/submission/:sid/error", tyrgin.PATCH),
 		tyrgin.NewRoute(cms.JobDownloadSubmission, "job/:secret/submission/:sid/download", tyrgin.GET),
 		tyrgin.NewRoute(cms.JobDownloadSupportingFiles, "job/:secret/assignment/:aid/supportingfiles/download", tyrgin.GET),
 		tyrgin.NewRoute(auth.Register, "register", tyrgin.POST),

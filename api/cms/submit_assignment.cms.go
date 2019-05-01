@@ -60,7 +60,7 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
-	job, err := sm.Submit(aid, fid, uid, sid, attempt+1, submittedFilesName, assign.Tests)
+	job, err := sm.Submit(aid, fid, uid, sid, attempt+1, submittedFilesName, assign.Tests, assign.TestBuildCMD, assign.Language)
 	if err != nil {
 		am.DeleteSubmission(aid, sid)
 		c.Set("error", err)
