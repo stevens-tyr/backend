@@ -41,7 +41,8 @@ var routeLevels = map[string]map[string]string{
 	"any": {
 		"course/:cid":             "GetCourse",
 		"course/:cid/assignments": "CourseAssignments",
-		"course/:cid/assignment/:aid/submission/download/:sid/:num": "DownloadSubmission",
+		"course/:cid/assignment/:aid/submission/:sid/details":       "GetSubmission",
+		"course/:cid/assignment/:aid/submission/:sid/download/:num": "DownloadSubmission",
 		"course/:cid/assignment/:aid/details":                       "GetAssignment",
 	},
 	"assistant": map[string]string{

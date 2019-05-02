@@ -6,8 +6,9 @@ import (
 
 func GetSubmission(c *gin.Context) {
 	sid, _ := c.Get("sid")
+	role, _ := c.Get("role")
 
-	submission, err := sm.Get(sid)
+	submission, err := sm.Get(sid, role.(string))
 	if err != nil {
 		c.Set("error", err)
 		return

@@ -99,13 +99,24 @@ func (s *SubmissionInterface) UpdateError(sid interface{}) errors.APIError {
 	return nil
 }
 
-func (s *SubmissionInterface) Get(sid interface{}) (*MongoSubmission, errors.APIError) {
+func (s *SubmissionInterface) Get(sid interface{}, role string) (*MongoSubmission, errors.APIError) {
 	var sub *MongoSubmission
 	res := s.col.FindOne(s.ctx, bson.M{"_id": sid}, options.FindOne())
 
 	err := res.Decode(&sub)
 	if err != nil {
 		return nil, errors.ErrorInvalidBSON
+	}
+
+	if role == "student" {
+		filteredResults := make([]WorkerResult, 0)
+		for _, result := range sub.Results {
+			if result.StudentFacing {
+				filteredResults = append(filteredResults, result)
+			}
+		}
+		sub.Results = filteredResults
+		return sub, nil
 	}
 
 	return sub, nil
