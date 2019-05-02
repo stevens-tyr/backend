@@ -16,7 +16,8 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 
 	"backend/errors"
-	"github.com/stevens-tyr/tyr-gin"
+
+	tyrgin "github.com/stevens-tyr/tyr-gin"
 )
 
 type (
@@ -211,7 +212,7 @@ func (s *SubmissionInterface) GetUsersRecentSubmissions(uid interface{}, limit i
 			"$expr": bson.M{"$eq": bson.A{"$assignment.published", true}}}},
 	}
 
-	var recentSubmissions []map[string]interface{}
+	recentSubmissions := make([]map[string]interface{}, 0)
 	cur, err := s.col.Aggregate(
 		s.ctx,
 		query,

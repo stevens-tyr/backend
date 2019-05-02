@@ -13,7 +13,7 @@ import (
 	"backend/errors"
 	"backend/forms"
 
-	"github.com/stevens-tyr/tyr-gin"
+	tyrgin "github.com/stevens-tyr/tyr-gin"
 )
 
 type (
@@ -175,7 +175,7 @@ func (u *UserInterface) GetCourses(uid interface{}, courseLevels map[string]inte
 		},
 	}
 
-	var courses []forms.CourseAggQuery
+	courses := make([]forms.CourseAggQuery, 0)
 	cur, err := u.col.Aggregate(u.ctx, query, options.Aggregate())
 	if err != nil {
 		return courses, errors.ErrorDatabaseFailedQuery

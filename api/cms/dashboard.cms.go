@@ -1,7 +1,7 @@
 package cms
 
 import (
-	"github.com/appleboy/gin-jwt"
+	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 
 	"backend/forms"
@@ -25,7 +25,7 @@ func Dashboard(c *gin.Context) {
 		return
 	}
 
-	var assignments []forms.AssignmentAggQuery
+	assignments := make([]forms.AssignmentAggQuery, 0)
 	for _, course := range courses {
 		courseAssignments, err := cm.GetAssignments(course.ID, course.Role)
 		for i := range courseAssignments {
