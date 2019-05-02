@@ -14,7 +14,7 @@ import (
 	"backend/errors"
 	"backend/forms"
 
-	"github.com/stevens-tyr/tyr-gin"
+	tyrgin "github.com/stevens-tyr/tyr-gin"
 )
 
 type (
@@ -219,13 +219,7 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 			"dueDate":         1,
 			"published":       1,
 			"testBuildCMD":    1,
-			"tests": bson.M{
-				"$filter": bson.M{
-					"input": "$tests",
-					"as":    "test",
-					"cond":  "$$test.studentFacing",
-				},
-			},
+			"tests":           1,
 		},
 	}
 
@@ -235,6 +229,13 @@ func (a *AssignmentInterface) GetFull(aid, uid interface{}, role string) (map[st
 				"input": "$submissions",
 				"as":    "submission",
 				"cond":  bson.M{"$eq": bson.A{"$$submission.userID", uid.(primitive.ObjectID)}},
+			},
+		}
+		project["$project"].(primitive.M)["tests"] = bson.M{
+			"$filter": bson.M{
+				"input": "$tests",
+				"as":    "test",
+				"cond":  "$$test.studentFacing",
 			},
 		}
 		query = append(query, project, bson.M{
