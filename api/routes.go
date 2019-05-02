@@ -6,7 +6,7 @@ import (
 	"backend/middleware"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stevens-tyr/tyr-gin"
+	tyrgin "github.com/stevens-tyr/tyr-gin"
 )
 
 // SetUp is a function to set up the routes for plague doctor microservice.
@@ -19,6 +19,8 @@ func SetUp() *gin.Engine {
 
 	server.Use(middleware.ObjectIDs())
 	server.Use(middleware.ErrorHandler())
+	server.StaticFile("favicon.ico", "./static/assets/favicon.ico")
+	server.Static("/assets", "./static/assets/")
 
 	var authEndpoints = []tyrgin.APIAction{
 		tyrgin.NewRoute(auth.AuthMiddleware.LoginHandler, "login", tyrgin.POST),
